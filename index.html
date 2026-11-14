@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -255,7 +256,7 @@
             <p class="text-xs text-slate-400 mb-4">Get <strong class="text-cyan-400 text-sm">+500 DYN</strong> instantly for every friend who joins Dayanium Miner!</p>
             
             <div class="bg-slate-900/90 border border-white/10 rounded-xl p-3 flex items-center justify-between gap-2 mb-4">
-                <code id="ref-link" class="text-xs text-cyan-300 truncate">https://t.me/DayaniumOfficialBot?start=DYN8842</code>
+                <code id="ref-link" class="text-xs text-cyan-300 truncate">https://t.me/DayaniumOfficialBot/mine?startapp=9092264647</code>
                 <button onclick="copyRefLink()" class="px-3.5 py-2 rounded-lg bg-cyan-400 text-slate-950 font-bold text-xs shrink-0">Copy</button>
             </div>
 
@@ -340,16 +341,28 @@
     </nav>
 
     <script>
+        // ============================================================
+        // ADMIN NOTIFICATION SETTINGS (Configured for @Dayaniumofficial)
+        // ============================================================
+        const ADMIN_BOT_TOKEN = "9002472348:AAFzkRu70I1SxnMRbkKq_gPhQKuZ6XMNFGM"; 
+        const ADMIN_CHAT_ID = "9092264647";     
+        // ============================================================
+
         const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
         let currentUserName = '@DayaniumPioneer';
+        let currentUserId = 'Unknown';
+        let directAppLink = 'https://t.me/DayaniumOfficialBot/mine';
+
         if (tg) {
             tg.ready();
             tg.expand();
             if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
                 const user = tg.initDataUnsafe.user;
+                currentUserId = user.id;
                 currentUserName = user.username ? '@' + user.username : user.first_name;
                 document.getElementById('tg-username').textContent = currentUserName;
-                document.getElementById('ref-link').textContent = `https://t.me/DayaniumOfficialBot?start=${user.id}`;
+                directAppLink = `https://t.me/DayaniumOfficialBot/mine?startapp=${user.id}`;
+                document.getElementById('ref-link').textContent = directAppLink;
             }
         }
 
@@ -534,13 +547,18 @@
             temp.select();
             document.execCommand('copy');
             document.body.removeChild(temp);
-            showToast('Referral link copied! Earn +500 DYN per friend.');
+            showToast('Direct Miner referral link copied! (+500 DYN per friend)');
         }
 
         function shareRefLink() {
             const link = document.getElementById('ref-link').textContent;
-            const text = encodeURIComponent('Join Dayanium (DYN) Official Miner & earn free BEP-20 tokens! 2,000,000 DYN Giveaway live. Trading starts 18 December!');
-            window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`, '_blank');
+            const text = encodeURIComponent('Tap & start mining Dayanium (DYN) directly in Telegram! 2,000,000 DYN Giveaway live:');
+            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
+            if (tg && tg.openTelegramLink) {
+                tg.openTelegramLink(shareUrl);
+            } else {
+                window.open(shareUrl, '_blank');
+            }
         }
 
         function copyContractAddress() {
@@ -553,7 +571,25 @@
             showToast('DYN Contract Address copied!');
         }
 
-        function requestWithdraw() {
+        async function sendAdminWithdrawNotification(userName, userId, amount, wallet) {
+            if (!ADMIN_BOT_TOKEN || ADMIN_BOT_TOKEN === "YOUR_BOT_TOKEN_HERE") return;
+            const text = `🚨 NEW DYN WITHDRAW REQUEST!\n\n👤 User: ${userName}\n🆔 Telegram ID: ${userId}\n💰 Amount: ${amount.toFixed(2)} DYN\n💳 BEP-20 Wallet:\n\`${wallet}\``;
+            try {
+                await fetch(`https://api.telegram.org/bot${ADMIN_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: ADMIN_CHAT_ID,
+                        text: text,
+                        parse_mode: 'Markdown'
+                    })
+                });
+            } catch (err) {
+                console.error('Notification error:', err);
+            }
+        }
+
+        async function requestWithdraw() {
             const wallet = document.getElementById('wallet-input').value.trim();
             if (!wallet.startsWith('0x') || wallet.length !== 42) {
                 showToast('Please enter a valid BEP-20 (0x...) wallet address!', true);
@@ -568,6 +604,8 @@
             const amount = state.balance;
             state.balance = 0;
             saveState();
+
+            await sendAdminWithdrawNotification(currentUserName, currentUserId, amount, wallet);
             showToast(`Withdraw request for ${amount.toFixed(2)} DYN submitted!`);
         }
 
