@@ -72,16 +72,36 @@
     <!-- Top Header -->
     <header class="px-4 pt-4 pb-3 flex items-center justify-between border-b border-white/5 bg-[#060A0F]/90 sticky top-0 z-30">
         <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-600 p-0.5">
-                <div class="w-full h-full bg-[#090E14] rounded-[10px] flex items-center justify-center font-display font-bold text-cyan-400 text-sm">D</div>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400/40 to-teal-600/40 p-0.5 shadow-md shadow-cyan-500/15">
+                <div class="w-full h-full bg-[#090E14] rounded-[10px] flex items-center justify-center">
+                    <!-- Mini Official Dayanium SVG Logo matching center coin -->
+                    <svg width="26" height="26" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="miniCoinMetal" x1="25" y1="20" x2="95" y2="100" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#475569"/>
+                                <stop offset="50%" stop-color="#1E293B"/>
+                                <stop offset="100%" stop-color="#0F172A"/>
+                            </linearGradient>
+                            <linearGradient id="miniCoinNeon" x1="25" y1="20" x2="95" y2="100" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#A5F3FC"/>
+                                <stop offset="50%" stop-color="#22D3EE"/>
+                                <stop offset="100%" stop-color="#0D9488"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M32 22H62C82.9868 22 100 39.0132 100 60C100 80.9868 82.9868 98 62 98H32V22Z" fill="url(#miniCoinMetal)" stroke="url(#miniCoinNeon)" stroke-width="5"/>
+                        <path d="M46 36H61C74.2548 36 85 46.7452 85 60C85 73.2548 74.2548 84 61 84H46V36Z" fill="#090E14" stroke="#67E8F9" stroke-width="3"/>
+                        <path d="M16 76C35 52 78 65 106 38" stroke="#CFFAFE" stroke-width="4.5" stroke-linecap="round"/>
+                        <path d="M22 86C46 68 78 74 102 52" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+                    </svg>
+                </div>
             </div>
             <div>
-                <h1 class="font-display font-bold text-sm text-white leading-tight">DAYANIUM MINER</h1>
+                <h1 class="font-display font-bold text-sm text-white leading-tight tracking-wide">DAYANIUM <span class="text-cyan-400">MINER</span></h1>
                 <p id="tg-username" class="text-[11px] text-cyan-400">@DayaniumPioneer</p>
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <!-- Admin Only Live Monitor Button (Visible only to Admin ID 9092264647) -->
+            <!-- Admin Only Live Monitor Button -->
             <button id="admin-panel-btn" onclick="openAdminModal()" class="hidden px-2.5 py-1.5 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[11px] font-bold flex items-center gap-1">
                 <i class="fa-solid fa-eye"></i> Live Stats
             </button>
@@ -183,7 +203,7 @@
                     <path d="M16 76C35 52 78 65 106 38" stroke="#CFFAFE" stroke-width="3.2" stroke-linecap="round"/>
                     <path d="M22 86C46 68 78 74 102 52" stroke="#22D3EE" stroke-width="1.8" stroke-linecap="round" opacity="0.85"/>
                 </svg>
-                <span class="text-[11px] font-semibold tracking-widest text-cyan-300 mt-1">TAP (+0.05 DYN)</span>
+                <span id="tap-reward-label" class="text-[11px] font-semibold tracking-widest text-cyan-300 mt-1">TAP (+0.05 DYN)</span>
             </button>
 
             <!-- Daily Tap Energy Bar -->
@@ -195,49 +215,140 @@
                 <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
                     <div id="energy-bar" class="h-full bg-gradient-to-r from-cyan-400 to-teal-500 transition-all duration-200" style="width: 100%"></div>
                 </div>
+                <div class="flex justify-between items-center mt-2">
+                    <button onclick="refillEnergyInstant()" class="text-[11px] text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-bolt-lightning"></i> Refill Energy Free
+                    </button>
+                    <span id="turbo-status-badge" class="hidden text-[11px] font-bold text-amber-300 animate-pulse">⚡ Turbo 2x Active</span>
+                </div>
             </div>
         </div>
 
-        <!-- 24-Hour Auto Mining Control -->
-        <div class="glass-panel rounded-2xl p-4 mt-4">
-            <div class="flex items-center justify-between mb-3">
-                <div>
-                    <h3 class="font-semibold text-sm text-white">24h Cloud Mining</h3>
-                    <p id="mining-status-text" class="text-xs text-slate-400">Ready to start 24h session</p>
+        <!-- Quick Turbo 2x Boost Card (High Engagement Tap Multiplier) -->
+        <div class="glass-panel rounded-2xl p-3.5 mb-4 border border-amber-400/30 bg-gradient-to-r from-amber-950/35 to-slate-900/90 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-base">
+                    <i class="fa-solid fa-bolt"></i>
                 </div>
-                <span id="mining-timer" class="font-mono text-sm font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-lg border border-cyan-500/20">24:00:00</span>
+                <div>
+                    <p class="text-xs font-bold text-white">Quick Turbo 2x Boost</p>
+                    <p class="text-[10px] text-slate-300">Double tap speed (+0.10 DYN/tap) for 1 hour!</p>
+                </div>
             </div>
-            <button id="mine-action-btn" onclick="toggleAutoMining()" class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 bg-gradient-to-r from-cyan-300 via-cyan-400 to-teal-500 hover:opacity-95 transition-all shadow-lg shadow-cyan-500/20">
-                <i class="fa-solid fa-play mr-1.5"></i> Start 24h Mining (+500 DYN)
+            <button id="turbo-btn" onclick="activateTurboBoost()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 font-bold text-xs shrink-0 shadow-md">
+                Activate 2x
             </button>
         </div>
 
-        <!-- Daily Lucky Spin Box -->
-        <div class="glass-panel rounded-2xl p-4 mt-4 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-xl bg-cyan-500/15 border border-cyan-400/30 text-cyan-400 flex items-center justify-center text-xl shrink-0">
-                    <i class="fa-solid fa-dharmachakra fa-spin" style="animation-duration: 8s;"></i>
-                </div>
+        <!-- 24-Hour Auto Mining Control -->
+        <div class="glass-panel rounded-3xl p-4">
+            <div class="flex items-center justify-between mb-3">
                 <div>
-                    <h4 class="font-bold text-sm text-white">Daily Lucky Spin</h4>
-                    <p id="spin-status" class="text-[11px] text-slate-400">Win up to +100 DYN free daily!</p>
+                    <p class="text-xs text-slate-400">24h Cloud Mining Status</p>
+                    <p id="mining-status-text" class="text-sm font-semibold text-white">Ready to start 24h session</p>
                 </div>
+                <span id="mining-timer" class="font-mono text-sm font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/20">24:00:00</span>
             </div>
-            <button id="spin-btn" onclick="spinWheel()" class="px-4 py-2.5 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-bold text-xs shrink-0 transition-all">
-                Spin Free
+            <button id="mine-action-btn" onclick="toggleAutoMining()" class="w-full py-3.5 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-cyan-300 via-cyan-400 to-teal-500 hover:opacity-95 transition-all shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-play mr-1.5"></i> Start 24h Mining (+500 DYN)
             </button>
         </div>
     </main>
 
-    <!-- TAB 2: TASKS SECTION -->
+    <!-- TAB 2: TASKS & DAILY STREAK + CRYPTO PREDICTION + QUIZ SECTION -->
     <section id="tab-tasks" class="hidden px-4 pt-5 max-w-md mx-auto">
-        <div class="mb-5">
-            <h2 class="font-display text-xl font-bold text-white">Earn Official Bonus DYN</h2>
-            <p class="text-xs text-slate-400">Join official channels to claim +200 DYN each!</p>
+        <!-- Clean Sub-Tab Switcher for Zero Clutter -->
+        <div class="grid grid-cols-3 gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-white/10 mb-5">
+            <button onclick="switchEarnSubTab('daily')" id="subnav-daily" class="py-2.5 px-2 rounded-xl text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 transition-all">
+                <i class="fa-solid fa-fire text-amber-400 mr-1"></i> Daily & Quiz
+            </button>
+            <button onclick="switchEarnSubTab('predict')" id="subnav-predict" class="py-2.5 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">
+                <i class="fa-solid fa-chart-line text-emerald-400 mr-1"></i> Predict
+            </button>
+            <button onclick="switchEarnSubTab('partners')" id="subnav-partners" class="py-2.5 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">
+                <i class="fa-solid fa-list-check text-cyan-400 mr-1"></i> Tasks
+            </button>
         </div>
 
-        <div class="space-y-3" id="task-list">
-            <!-- Tasks injected by JS -->
+        <!-- SUB-TAB 1: 15-DAY STREAK & DAILY CRYPTO QUIZ -->
+        <div id="subtab-daily" class="space-y-4">
+            <!-- 15-Day Progressive Daily Streak Check-In -->
+            <div class="glass-panel rounded-3xl p-4 border border-amber-400/30 bg-gradient-to-br from-amber-950/25 to-slate-900/90">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h2 class="font-display text-base font-bold text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-fire text-amber-400"></i> 15-Day Daily Streak
+                        </h2>
+                        <p class="text-[11px] text-slate-400">Login daily without missing to unlock huge rewards!</p>
+                    </div>
+                    <span id="streak-badge" class="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-400/30 text-amber-300 font-bold text-xs">Day 1 / 15</span>
+                </div>
+
+                <!-- 15 Days Grid -->
+                <div id="streak-days-grid" class="grid grid-cols-5 gap-1.5 my-3">
+                    <!-- Rendered by JS -->
+                </div>
+
+                <button id="claim-streak-btn" onclick="claimDailyStreak()" class="w-full py-3 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 shadow-lg transition-all">
+                    <i class="fa-solid fa-calendar-check mr-1.5"></i> Claim Today's Streak Bonus
+                </button>
+            </div>
+
+            <!-- Daily Crypto Quiz Card (+250 DYN) -->
+            <div class="glass-panel rounded-3xl p-4 border border-cyan-400/30 bg-gradient-to-br from-cyan-950/30 to-slate-900/90">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-display text-base font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-brain text-cyan-400"></i> Daily Crypto Quiz
+                    </h3>
+                    <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/30 text-cyan-300 font-bold text-[11px]">+250 DYN</span>
+                </div>
+                <p id="quiz-question" class="text-xs font-medium text-slate-200 bg-slate-900/80 p-3 rounded-xl border border-white/10 mb-3">
+                    Loading today's question...
+                </p>
+                <div id="quiz-options" class="grid grid-cols-2 gap-2">
+                    <!-- Options injected by JS -->
+                </div>
+                <p id="quiz-status-msg" class="text-[11px] text-slate-400 mt-2.5 text-center"></p>
+            </div>
+        </div>
+
+        <!-- SUB-TAB 2: GLOBAL BTC, ETH, SOL UTC PREDICTION -->
+        <div id="subtab-predict" class="hidden space-y-4">
+            <div class="glass-panel rounded-3xl p-4 border border-cyan-400/30">
+                <div class="flex items-center justify-between mb-1">
+                    <h2 class="font-display text-base font-bold text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-line text-cyan-400"></i> Live Crypto Prediction
+                    </h2>
+                    <span id="utc-clock-badge" class="font-mono text-[10px] px-2 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 text-cyan-300">UTC 00:00</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mb-3">Predict if price closes <strong class="text-emerald-400">UP</strong> or <strong class="text-rose-400">DOWN</strong> at 00:00 UTC. Earn <strong class="text-cyan-300">+500 DYN</strong> per coin!</p>
+
+                <div id="prediction-cards-container" class="space-y-3">
+                    <!-- BTC, ETH, SOL cards rendered by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SUB-TAB 3: OFFICIAL PARTNER TASKS & SPONSORSHIP -->
+        <div id="subtab-partners" class="hidden space-y-4">
+            <div>
+                <h3 class="font-display text-base font-bold text-white mb-1">Official Partner Tasks</h3>
+                <p class="text-[11px] text-slate-400 mb-3">Complete tasks to earn extra DYN!</p>
+                <div class="space-y-2.5" id="task-list">
+                    <!-- Tasks injected by JS -->
+                </div>
+            </div>
+
+            <!-- Sponsor / Advertise Promotion Card -->
+            <div class="glass-panel rounded-2xl p-4 border border-amber-400/30 bg-gradient-to-r from-amber-950/30 to-slate-900/90 flex items-center justify-between gap-3">
+                <div>
+                    <h4 class="font-bold text-sm text-amber-300 flex items-center gap-1.5"><i class="fa-solid fa-bullhorn"></i> Want to Sponsor Here?</h4>
+                    <p class="text-[11px] text-slate-300 mt-0.5">Message <strong class="text-white">@Dayaniumofficial</strong> to promote your project.</p>
+                </div>
+                <button onclick="contactSponsorAdmin()" class="px-3.5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shrink-0 shadow-md">
+                    Contact
+                </button>
+            </div>
         </div>
     </section>
 
@@ -343,8 +454,11 @@
             </div>
             <div class="bg-slate-950/70 rounded-xl p-3 border border-emerald-500/20 mb-2">
                 <p class="text-[11px] text-slate-400">Projected Market Price Range:</p>
-                <p class="font-display text-lg font-bold text-emerald-400 mt-0.5">$0.0002 – $0.4088 <span class="text-xs font-normal text-slate-300">/ DYN</span></p>
-                <p class="text-[10px] text-cyan-300 mt-1">Early miners accumulate tokens before PancakeSwap public trading opens on December 18!</p>
+                <p class="font-display text-lg font-bold text-emerald-400 mt-0.5">$0.0001 – $0.4088 <span class="text-xs font-normal text-slate-300">/ DYN</span></p>
+                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/10 text-[10px]">
+                    <span class="text-slate-400">Standard Conversion Rate:</span>
+                    <span class="text-cyan-300 font-bold">1,000 DYN ≈ $0.10 – $408.80</span>
+                </div>
             </div>
             <p class="text-[11px] text-slate-300">Your current balance (<strong id="est-value-dyn" class="text-white">0 DYN</strong>) could be worth <strong id="est-value-usd" class="text-emerald-300">$0.00 – $0.00</strong> at target trading range!</p>
         </div>
@@ -409,7 +523,21 @@
         const MINING_REWARD_24H = 500;
         const TAP_REWARD = 0.05;
 
-        let state = JSON.parse(localStorage.getItem('dyn_miner_v4')) || {
+        // 15-Day Progressive Streak Rewards Array
+        const STREAK_REWARDS = [20, 40, 60, 100, 150, 200, 250, 300, 400, 500, 600, 750, 900, 1200, 2000];
+
+        // Daily Crypto Quiz Pool (Rotates automatically by UTC Day)
+        const DAILY_QUIZZES = [
+            { q: "Which blockchain network does Dayanium (DYN) operate on?", options: ["BEP-20 (BSC)", "TRC-20"], correct: 0 },
+            { q: "When does Dayanium (DYN) public trading & selling open?", options: ["18 December 2026", "1 January 2027"], correct: 0 },
+            { q: "What is the total fixed supply of Dayanium (DYN)?", options: ["100,000,000 DYN", "10,000,000,000 DYN"], correct: 0 },
+            { q: "What is the minimum balance required to request a DYN withdrawal?", options: ["5,000 DYN", "50,000 DYN"], correct: 0 },
+            { q: "How much bonus do you earn for each correct BTC, ETH, or SOL prediction?", options: ["+500 DYN", "+50 DYN"], correct: 0 },
+            { q: "What is the total prize pool for the Top 20 Global Miners Giveaway?", options: ["2,000,000 DYN", "500,000 DYN"], correct: 0 },
+            { q: "How many friends do you need to invite to unlock the +3,000 DYN milestone?", options: ["10 Friends", "50 Friends"], correct: 0 }
+        ];
+
+        let state = JSON.parse(localStorage.getItem('dyn_miner_v5')) || {
             balance: 100.00,
             energy: 500,
             miningStartTime: null,
@@ -418,8 +546,29 @@
             lastSpinDate: null,
             referralCount: 0,
             claimedTenRefBonus: false,
-            referredByProcessed: false
+            referredByProcessed: false,
+            turboUntil: 0,
+            streakDay: 1,
+            lastStreakDate: null,
+            predictions: {},
+            lastQuizDate: null,
+            lastQuizCorrect: false
         };
+
+        // Ensure backward compatibility for existing users
+        if (!state.streakDay) state.streakDay = 1;
+        if (!state.predictions) state.predictions = {};
+        if (state.lastQuizDate === undefined) state.lastQuizDate = null;
+
+        function getTodayUTC() {
+            return new Date().toISOString().split('T')[0]; // YYYY-MM-DD in UTC
+        }
+
+        function getYesterdayUTC() {
+            const d = new Date();
+            d.setUTCDate(d.getUTCDate() - 1);
+            return d.toISOString().split('T')[0];
+        }
 
         if (tg) {
             tg.ready();
@@ -432,23 +581,20 @@
                 directAppLink = `https://t.me/DayaniumOfficialBot/mine?startapp=${user.id}`;
                 document.getElementById('ref-link').textContent = directAppLink;
 
-                // Show Secret Live Stats button ONLY to Admin (9092264647)
                 if (currentUserId === ADMIN_CHAT_ID) {
                     document.getElementById('admin-panel-btn').classList.remove('hidden');
                 }
             }
-            // Check if user opened via a referral link (?startapp=REF_ID)
             const startParam = tg.initDataUnsafe?.start_param || new URLSearchParams(window.location.search).get('startapp');
             if (startParam && startParam !== currentUserId && !state.referredByProcessed) {
                 state.referredByProcessed = true;
                 state.balance += 500;
-                localStorage.setItem('dyn_miner_v4', JSON.stringify(state));
+                localStorage.setItem('dyn_miner_v5', JSON.stringify(state));
                 creditReferrerInCloud(startParam);
                 setTimeout(() => showToast('Welcome Referral Bonus! +500 DYN credited!'), 800);
             }
         }
 
-        // Credit the inviter in Firebase when a friend joins via their link
         async function creditReferrerInCloud(referrerId) {
             if (!FIREBASE_DB_URL || !referrerId) return;
             try {
@@ -467,11 +613,9 @@
             } catch (e) {}
         }
 
-        // Sync user progress to Firebase in real-time
         async function syncUserToCloud() {
             if (!FIREBASE_DB_URL || currentUserId === 'Unknown') return;
             try {
-                // First pull latest referral count from cloud if others invited via our link
                 const res = await fetch(`${FIREBASE_DB_URL}/users/${currentUserId}.json`);
                 const cloudData = await res.json();
                 if (cloudData && Number(cloudData.referrals) > (state.referralCount || 0)) {
@@ -548,7 +692,7 @@
         ];
 
         function saveState() {
-            localStorage.setItem('dyn_miner_v4', JSON.stringify(state));
+            localStorage.setItem('dyn_miner_v5', JSON.stringify(state));
             updateUI();
             syncUserToCloud();
         }
@@ -575,21 +719,100 @@
             const activeNav = document.getElementById(`nav-${tabName}`);
             activeNav.classList.add('text-cyan-400', 'bg-cyan-500/10');
             activeNav.classList.remove('text-slate-400');
+            if (tabName === 'tasks') {
+                renderStreakGrid();
+                renderDailyQuiz();
+                renderPredictions();
+                verifyPastPredictions();
+            }
             if (tabName === 'giveaway') renderLeaderboard();
             if (tabName === 'friends') renderReferralChart();
         }
 
-        function handleCoinTap(e) {
-            if (state.energy <= 0) {
-                showToast('Tap energy empty! Use 24h Cloud Mining.', true);
+        function switchEarnSubTab(subName) {
+            ['daily', 'predict', 'partners'].forEach(sub => {
+                document.getElementById(`subtab-${sub}`).classList.add('hidden');
+                const btn = document.getElementById(`subnav-${sub}`);
+                btn.className = 'py-2.5 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all';
+            });
+            document.getElementById(`subtab-${subName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`subnav-${subName}`);
+            activeBtn.className = 'py-2.5 px-2 rounded-xl text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/30 transition-all';
+        }
+
+        function renderDailyQuiz() {
+            const todayUTC = getTodayUTC();
+            const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % DAILY_QUIZZES.length;
+            const quiz = DAILY_QUIZZES[dayIndex];
+            const answeredToday = state.lastQuizDate === todayUTC;
+
+            document.getElementById('quiz-question').textContent = quiz.q;
+            const optionsEl = document.getElementById('quiz-options');
+            const statusEl = document.getElementById('quiz-status-msg');
+
+            optionsEl.innerHTML = quiz.options.map((opt, idx) => {
+                let btnStyle = 'bg-slate-800/90 hover:bg-cyan-500/20 text-white border border-white/15';
+                if (answeredToday) {
+                    if (idx === quiz.correct) {
+                        btnStyle = 'bg-emerald-500/25 text-emerald-300 border border-emerald-400/50';
+                    } else {
+                        btnStyle = 'bg-slate-900/60 text-slate-500 border border-white/5';
+                    }
+                }
+                return `
+                    <button onclick="answerDailyQuiz(${idx})" ${answeredToday ? 'disabled' : ''} class="py-2.5 px-3 rounded-xl font-bold text-xs transition-all ${btnStyle}">
+                        ${opt} ${answeredToday && idx === quiz.correct ? '✓' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            if (answeredToday) {
+                statusEl.innerHTML = state.lastQuizCorrect
+                    ? '<span class="text-emerald-400 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>Correct! +250 DYN claimed today. Next quiz at 00:00 UTC.</span>'
+                    : '<span class="text-amber-400 font-semibold"><i class="fa-solid fa-clock mr-1"></i>Attempted today! Come back at 00:00 UTC for the next quiz.</span>';
+            } else {
+                statusEl.textContent = 'Select the correct answer above to win +250 DYN instantly!';
+            }
+        }
+
+        function answerDailyQuiz(selectedIdx) {
+            const todayUTC = getTodayUTC();
+            if (state.lastQuizDate === todayUTC) {
+                showToast('You already completed today\'s quiz!', true);
                 return;
             }
-            state.balance = Number((state.balance + TAP_REWARD).toFixed(2));
+            const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24)) % DAILY_QUIZZES.length;
+            const quiz = DAILY_QUIZZES[dayIndex];
+
+            state.lastQuizDate = todayUTC;
+            if (selectedIdx === quiz.correct) {
+                state.lastQuizCorrect = true;
+                state.balance = Number((state.balance + 250).toFixed(2));
+                showToast('Correct Answer! +250 DYN added to your balance!');
+                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            } else {
+                state.lastQuizCorrect = false;
+                showToast('Wrong answer! Better luck tomorrow at 00:00 UTC.', true);
+                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+            }
+            saveState();
+            renderDailyQuiz();
+        }
+
+        function handleCoinTap(e) {
+            if (state.energy <= 0) {
+                showToast('Tap energy empty! Click Refill Energy or use 24h Mining.', true);
+                return;
+            }
+            const isTurboActive = state.turboUntil && Date.now() < state.turboUntil;
+            const reward = isTurboActive ? TAP_REWARD * 2 : TAP_REWARD;
+
+            state.balance = Number((state.balance + reward).toFixed(2));
             state.energy -= 1;
 
             const plus = document.createElement('div');
             plus.className = 'floating-plus';
-            plus.textContent = '+0.05 DYN';
+            plus.textContent = isTurboActive ? '+0.10 DYN (2x)' : '+0.05 DYN';
             const x = e.clientX || window.innerWidth / 2;
             const y = e.clientY || window.innerHeight / 2;
             plus.style.left = (x - 35) + 'px';
@@ -601,6 +824,235 @@
                 tg.HapticFeedback.impactOccurred('light');
             }
             saveState();
+        }
+
+        function refillEnergyInstant() {
+            state.energy = 500;
+            saveState();
+            showToast('Energy refilled instantly to 500 / 500!');
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        function activateTurboBoost() {
+            const now = Date.now();
+            if (state.turboUntil && now < state.turboUntil) {
+                showToast('Turbo 2x Speed is already active!', true);
+                return;
+            }
+            // 1 Hour Turbo Boost
+            state.turboUntil = now + (60 * 60 * 1000);
+            saveState();
+            showToast('Turbo 2x Speed activated for 1 hour!');
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        // ============================================================
+        // 15-DAY PROGRESSIVE DAILY STREAK SYSTEM
+        // ============================================================
+        function checkStreakContinuity() {
+            const todayUTC = getTodayUTC();
+            const yesterdayUTC = getYesterdayUTC();
+            if (state.lastStreakDate && state.lastStreakDate !== todayUTC && state.lastStreakDate !== yesterdayUTC) {
+                // User missed a day, reset streak to Day 1
+                state.streakDay = 1;
+                saveState();
+            }
+        }
+
+        function renderStreakGrid() {
+            checkStreakContinuity();
+            const todayUTC = getTodayUTC();
+            const claimedToday = state.lastStreakDate === todayUTC;
+            const currentDay = state.streakDay || 1;
+
+            document.getElementById('streak-badge').textContent = `Day ${currentDay} / 15`;
+            const grid = document.getElementById('streak-days-grid');
+            let html = '';
+
+            for (let i = 1; i <= 15; i++) {
+                const reward = STREAK_REWARDS[i - 1];
+                const isPast = i < currentDay || (i === currentDay && claimedToday);
+                const isToday = i === currentDay && !claimedToday;
+                const isDay15 = i === 15;
+
+                let cardStyle = 'bg-slate-900/80 border-white/10 text-slate-400';
+                if (isPast) {
+                    cardStyle = 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300';
+                } else if (isToday) {
+                    cardStyle = 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/10';
+                } else if (isDay15) {
+                    cardStyle = 'bg-cyan-500/15 border-cyan-400/40 text-cyan-300';
+                }
+
+                html += `
+                    <div class="rounded-xl p-1.5 text-center border ${cardStyle}">
+                        <div class="text-[9px] font-bold uppercase">Day ${i}</div>
+                        <div class="text-[10px] font-extrabold mt-0.5">${isPast ? '✓' : '+' + reward}</div>
+                    </div>
+                `;
+            }
+            grid.innerHTML = html;
+
+            const btn = document.getElementById('claim-streak-btn');
+            if (claimedToday) {
+                btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Today\'s Streak Claimed! Come back at 00:00 UTC';
+                btn.className = 'w-full py-3 rounded-xl font-bold text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+            } else {
+                const todayReward = STREAK_REWARDS[currentDay - 1];
+                btn.innerHTML = `<i class="fa-solid fa-gift mr-1.5"></i> Claim Day ${currentDay} Bonus (+${todayReward} DYN)`;
+                btn.className = 'w-full py-3 rounded-xl font-bold text-xs text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 shadow-lg transition-all';
+            }
+        }
+
+        function claimDailyStreak() {
+            checkStreakContinuity();
+            const todayUTC = getTodayUTC();
+            if (state.lastStreakDate === todayUTC) {
+                showToast('You already claimed today\'s streak bonus! Next reset at 00:00 UTC.', true);
+                return;
+            }
+            const currentDay = state.streakDay || 1;
+            const reward = STREAK_REWARDS[currentDay - 1];
+            state.balance = Number((state.balance + reward).toFixed(2));
+            state.lastStreakDate = todayUTC;
+            state.streakDay = currentDay >= 15 ? 1 : currentDay + 1;
+            saveState();
+            renderStreakGrid();
+            showToast(`Day ${currentDay} Streak Claimed! +${reward} DYN added!`);
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+        }
+
+        // ============================================================
+        // AUTOMATIC BTC, ETH, SOL UTC PRICE PREDICTION SYSTEM
+        // ============================================================
+        const PREDICTION_COINS = [
+            { symbol: 'BTC', pair: 'BTCUSDT', name: 'Bitcoin', icon: 'fa-brands fa-bitcoin text-amber-400' },
+            { symbol: 'ETH', pair: 'ETHUSDT', name: 'Ethereum', icon: 'fa-brands fa-ethereum text-indigo-400' },
+            { symbol: 'SOL', pair: 'SOLUSDT', name: 'Solana', icon: 'fa-solid fa-circle-nodes text-purple-400' }
+        ];
+
+        let liveCryptoPrices = { BTC: null, ETH: null, SOL: null };
+
+        async function fetchLiveCryptoPrices() {
+            try {
+                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]');
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        if (item.symbol === 'BTCUSDT') liveCryptoPrices.BTC = { price: parseFloat(item.lastPrice), open: parseFloat(item.openPrice), change: parseFloat(item.priceChangePercent) };
+                        if (item.symbol === 'ETHUSDT') liveCryptoPrices.ETH = { price: parseFloat(item.lastPrice), open: parseFloat(item.openPrice), change: parseFloat(item.priceChangePercent) };
+                        if (item.symbol === 'SOLUSDT') liveCryptoPrices.SOL = { price: parseFloat(item.lastPrice), open: parseFloat(item.openPrice), change: parseFloat(item.priceChangePercent) };
+                    });
+                    renderPredictions();
+                }
+            } catch (e) {}
+        }
+
+        async function verifyPastPredictions() {
+            const todayUTC = getTodayUTC();
+            let totalWon = 0;
+            let settledCount = 0;
+
+            for (const coin of PREDICTION_COINS) {
+                const pred = state.predictions[coin.symbol];
+                if (pred && pred.date && pred.date !== todayUTC && !pred.settled) {
+                    try {
+                        // Fetch the exact daily UTC candle from Binance for that prediction date
+                        const startMs = Date.parse(pred.date + 'T00:00:00Z');
+                        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin.pair}&interval=1d&startTime=${startMs}&limit=1`);
+                        const klines = await res.json();
+                        if (Array.isArray(klines) && klines.length > 0) {
+                            const openPrice = parseFloat(klines[0][1]);
+                            const closePrice = parseFloat(klines[0][4]);
+                            const actualDirection = closePrice >= openPrice ? 'UP' : 'DOWN';
+                            pred.settled = true;
+                            pred.won = (pred.direction === actualDirection);
+                            settledCount++;
+                            if (pred.won) {
+                                totalWon += 500;
+                            }
+                        }
+                    } catch (e) {}
+                }
+            }
+
+            if (settledCount > 0) {
+                if (totalWon > 0) {
+                    state.balance = Number((state.balance + totalWon).toFixed(2));
+                    showToast(`Crypto Prediction Result: You won +${totalWon} DYN!`);
+                } else {
+                    showToast('Yesterday\'s crypto predictions settled. Try today\'s round!', true);
+                }
+                saveState();
+                renderPredictions();
+            }
+        }
+
+        function renderPredictions() {
+            const container = document.getElementById('prediction-cards-container');
+            if (!container) return;
+            const todayUTC = getTodayUTC();
+
+            container.innerHTML = PREDICTION_COINS.map(coin => {
+                const pred = state.predictions[coin.symbol];
+                const isTodayPred = pred && pred.date === todayUTC;
+                const priceObj = liveCryptoPrices[coin.symbol];
+                const priceText = priceObj ? `$${priceObj.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Live Price...';
+                const changeText = priceObj ? `${priceObj.change >= 0 ? '+' : ''}${priceObj.change.toFixed(2)}%` : '';
+                const changeColor = priceObj && priceObj.change >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+                return `
+                    <div class="bg-slate-900/90 border border-white/10 rounded-2xl p-3">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <div class="flex items-center gap-2">
+                                <i class="${coin.icon} text-lg"></i>
+                                <div>
+                                    <p class="text-xs font-bold text-white">${coin.name} (${coin.symbol})</p>
+                                    <p class="text-[10px] font-mono text-slate-300">${priceText} <span class="${changeColor} font-bold ml-1">${changeText}</span></p>
+                                </div>
+                            </div>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">+500 DYN</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="submitCoinPrediction('${coin.symbol}', 'UP')" ${isTodayPred ? 'disabled' : ''} class="py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${isTodayPred && pred.direction === 'UP' ? 'bg-emerald-500 text-slate-950 shadow-md' : isTodayPred ? 'bg-slate-800/60 text-slate-500' : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30'}">
+                                <i class="fa-solid fa-arrow-trend-up"></i> UP ${isTodayPred && pred.direction === 'UP' ? '✓' : ''}
+                            </button>
+                            <button onclick="submitCoinPrediction('${coin.symbol}', 'DOWN')" ${isTodayPred ? 'disabled' : ''} class="py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${isTodayPred && pred.direction === 'DOWN' ? 'bg-rose-500 text-white shadow-md' : isTodayPred ? 'bg-slate-800/60 text-slate-500' : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30'}">
+                                <i class="fa-solid fa-arrow-trend-down"></i> DOWN ${isTodayPred && pred.direction === 'DOWN' ? '✓' : ''}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function submitCoinPrediction(symbol, direction) {
+            const todayUTC = getTodayUTC();
+            if (state.predictions[symbol] && state.predictions[symbol].date === todayUTC) {
+                showToast(`You already predicted ${symbol} for today's UTC cycle!`, true);
+                return;
+            }
+            const currentPrice = liveCryptoPrices[symbol] ? liveCryptoPrices[symbol].price : 0;
+            state.predictions[symbol] = {
+                date: todayUTC,
+                direction: direction,
+                entryPrice: currentPrice,
+                settled: false,
+                won: false
+            };
+            saveState();
+            renderPredictions();
+            showToast(`${symbol} ${direction} prediction locked! Auto-result at 00:00 UTC (+500 DYN).`);
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function contactSponsorAdmin() {
+            const adminTg = 'https://t.me/Dayaniumofficial';
+            if (tg && tg.openTelegramLink) {
+                tg.openTelegramLink(adminTg);
+            } else {
+                window.open(adminTg, '_blank');
+            }
         }
 
         function toggleAutoMining() {
@@ -620,20 +1072,6 @@
                     showToast('Mining in progress! Come back when 24h finishes.');
                 }
             }
-        }
-
-        function spinWheel() {
-            const today = new Date().toDateString();
-            if (state.lastSpinDate === today) {
-                showToast('You already used today’s free spin! Come back tomorrow.', true);
-                return;
-            }
-            const rewards = [15, 25, 40, 50, 75, 100];
-            const won = rewards[Math.floor(Math.random() * rewards.length)];
-            state.balance += won;
-            state.lastSpinDate = today;
-            showToast(`Lucky Spin! You won +${won} DYN!`);
-            saveState();
         }
 
         function renderTasks() {
@@ -867,29 +1305,41 @@
             document.getElementById('energy-text').textContent = `${state.energy} / 500`;
             document.getElementById('energy-bar').style.width = `${(state.energy / 500) * 100}%`;
 
+            const isTurboActive = state.turboUntil && Date.now() < state.turboUntil;
+            const turboBadge = document.getElementById('turbo-status-badge');
+            const turboBtn = document.getElementById('turbo-btn');
+            const tapLabel = document.getElementById('tap-reward-label');
+
+            if (isTurboActive) {
+                const remSec = Math.floor((state.turboUntil - Date.now()) / 1000);
+                const rmMin = Math.floor(remSec / 60);
+                turboBadge.classList.remove('hidden');
+                turboBadge.textContent = `⚡ Turbo 2x Active (${rmMin}m left)`;
+                turboBtn.textContent = 'Turbo Active';
+                turboBtn.classList.add('opacity-50');
+                tapLabel.textContent = 'TAP (+0.10 DYN 2x)';
+            } else {
+                turboBadge.classList.add('hidden');
+                turboBtn.textContent = 'Activate 2x';
+                turboBtn.classList.remove('opacity-50');
+                tapLabel.textContent = 'TAP (+0.05 DYN)';
+            }
+
             const rankEl = document.getElementById('miner-rank');
             if (state.balance >= 5000) rankEl.textContent = 'Diamond Pioneer (Withdraw Ready)';
             else if (state.balance >= 2500) rankEl.textContent = 'Platinum Pioneer';
             else if (state.balance >= 1000) rankEl.textContent = 'Gold Pioneer';
             else rankEl.textContent = 'Bronze Pioneer';
 
-            const today = new Date().toDateString();
-            const spinBtn = document.getElementById('spin-btn');
-            if (state.lastSpinDate === today) {
-                spinBtn.textContent = 'Spun Today ✓';
-                spinBtn.classList.add('opacity-50');
-            }
-
             const pct = Math.min(100, (state.balance / MIN_WITHDRAW) * 100);
             document.getElementById('withdraw-progress-text').textContent = `${Math.floor(state.balance).toLocaleString()} / 5,000 DYN`;
             document.getElementById('withdraw-progress-bar').style.width = `${pct}%`;
 
-            // Update Estimated USD Value on Withdraw Page
             const estDynEl = document.getElementById('est-value-dyn');
             const estUsdEl = document.getElementById('est-value-usd');
             if (estDynEl && estUsdEl) {
                 estDynEl.textContent = `${Math.floor(state.balance).toLocaleString()} DYN`;
-                const lowUsd = (state.balance * 0.0002).toFixed(2);
+                const lowUsd = (state.balance * 0.0001).toFixed(2);
                 const highUsd = (state.balance * 0.4088).toFixed(2);
                 estUsdEl.textContent = `$${lowUsd} – $${highUsd}`;
             }
@@ -922,6 +1372,7 @@
                     const hrs = String(Math.floor(remaining / 3600000)).padStart(2, '0');
                     const mins = String(Math.floor((remaining % 3600000) / 60000)).padStart(2, '0');
                     const secs = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+                    timerEl.testid = 'timer';
                     timerEl.textContent = `${hrs}:${mins}:${secs}`;
                     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Mining in Progress (+500 DYN)...';
                 }
@@ -938,9 +1389,21 @@
         setInterval(() => {
             updateUI();
             updateDec18Countdown();
+            const utcEl = document.getElementById('utc-clock-badge');
+            if (utcEl) {
+                const now = new Date();
+                const hh = String(now.getUTCHours()).padStart(2, '0');
+                const mm = String(now.getUTCMinutes()).padStart(2, '0');
+                utcEl.textContent = `UTC ${hh}:${mm}`;
+            }
         }, 1000);
 
         renderTasks();
+        renderStreakGrid();
+        renderDailyQuiz();
+        renderPredictions();
+        fetchLiveCryptoPrices();
+        verifyPastPredictions();
         renderReferralChart();
         updateDec18Countdown();
         updateUI();
