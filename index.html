@@ -1339,8 +1339,8 @@
             const estUsdEl = document.getElementById('est-value-usd');
             if (estDynEl && estUsdEl) {
                 estDynEl.textContent = `${Math.floor(state.balance).toLocaleString()} DYN`;
-                const lowUsd = (state.balance * 0.0001).toFixed(2);
-                const highUsd = (state.balance * 0.4088).toFixed(2);
+                const lowUsd = (state.balance * 0.00001).toFixed(2);
+                const highUsd = (state.balance * 0.0011).toFixed(2);
                 estUsdEl.textContent = `$${lowUsd} – $${highUsd}`;
             }
 
