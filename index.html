@@ -89,22 +89,26 @@
         <p id="toast-msg" class="text-xs font-medium text-slate-100 leading-snug"></p>
     </div>
 
-    <!-- ADMIN MODAL (HIDDEN FOR REGULAR USERS, ONLY VISIBLE FOR ADMIN ID 9092264647) -->
+    <!-- ADMIN MODAL (ONLY ACCESSIBLE BY ADMIN ID 9092264647) -->
     <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-md rounded-3xl p-5 border border-cyan-400/40 max-h-[85vh] flex flex-col">
             <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
                 <h3 class="font-display text-base font-bold text-cyan-400"><i class="fa-solid fa-shield-halved mr-1.5"></i> Admin Live Control Panel</h3>
                 <button onclick="closeAdminModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center font-bold">×</button>
             </div>
-            <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="grid grid-cols-2 gap-3 mb-3">
                 <div class="bg-slate-900/90 p-3 rounded-2xl border border-white/10">
-                    <p class="text-[10px] text-slate-400 uppercase">Total Real Miners</p>
+                    <p class="text-[10px] text-slate-400 uppercase">Tracked Miners</p>
                     <p id="admin-total-joined" class="font-display text-xl font-bold text-white mt-0.5">0</p>
                 </div>
                 <div class="bg-slate-900/90 p-3 rounded-2xl border border-white/10">
                     <p class="text-[10px] text-slate-400 uppercase">Total Mined Pool</p>
                     <p id="admin-total-pool" class="font-display text-xl font-bold text-cyan-400 mt-0.5">0 DYN</p>
                 </div>
+            </div>
+            <div class="bg-cyan-950/40 border border-cyan-400/30 rounded-xl p-2.5 mb-3 text-[11px] text-cyan-200 flex items-center justify-between gap-2">
+                <span><i class="fa-brands fa-telegram mr-1 text-cyan-400"></i> Sync Cross-Device Logs from Bot:</span>
+                <button onclick="syncFromTelegramBot()" class="px-2.5 py-1 rounded-lg bg-cyan-400 text-slate-950 font-bold text-[10px] shrink-0">Sync Now</button>
             </div>
             <p class="text-xs font-bold text-white mb-2"><i class="fa-solid fa-users mr-1 text-cyan-400"></i> Live Miners, Referrals & Balances:</p>
             <div id="admin-customer-list" class="space-y-2 overflow-y-auto flex-1 pr-1"></div>
@@ -175,7 +179,7 @@
                 <span class="text-cyan-400 font-bold text-sm">DYN</span>
             </div>
             <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-bold">
-                <i class="fa-solid fa-bolt text-amber-400"></i> 3,000 DYN Starter & Recovery Bonus Active
+                <i class="fa-solid fa-bolt text-amber-400"></i> Auto-Saved to Account
             </div>
         </div>
 
@@ -231,10 +235,10 @@
                 </div>
                 <div>
                     <h3 class="font-display font-bold text-sm text-white">24h Cloud Mining</h3>
-                    <p class="text-[11px] text-emerald-300 mt-0.5">Earn +500 DYN per automated session</p>
+                    <p id="auto-mining-status" class="text-[11px] text-emerald-300 mt-0.5">Earn +500 DYN per automated session</p>
                 </div>
             </div>
-            <button onclick="toggleAutoMining()" class="px-4 py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20">
+            <button id="auto-mining-btn" onclick="toggleAutoMining()" class="px-4 py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20">
                 Start 24h
             </button>
         </div>
@@ -472,13 +476,9 @@
     </nav>
 
     <!-- ===================================================================== -->
-    <!-- JAVASCRIPT APPLICATION LOGIC (CLOUD SYNC + TELEGRAM BOT ALERTS)       -->
+    <!-- JAVASCRIPT APPLICATION LOGIC (PERSISTENT STORAGE + BOT TELEMETRY)     -->
     <!-- ===================================================================== -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
         const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
         if (tg) {
             try { tg.ready(); tg.expand(); } catch (e) {}
@@ -486,24 +486,15 @@
 
         const ADMIN_CHAT_ID = "9092264647";
         const BOT_TOKEN = "9002472348:AAH6AHtl-cbDagrWS87OPc6lx-fuc_0glz0";
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'dayanium-miner-prod';
+        const STORAGE_PREFIX = 'dyn_permanent_user_v20_';
+        const REGISTRY_KEY = 'dyn_admin_registry_v20';
 
-        let db = null;
-        let auth = null;
-        let isCloudReady = false;
-
-        try {
-            if (typeof __firebase_config !== 'undefined') {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-            }
-        } catch (err) {
-            console.warn("Cloud init fallback:", err);
+        // Identify User ID permanently (Fallback to persistent device ID if opened outside Telegram)
+        let currentUserId = localStorage.getItem('dyn_device_fallback_id');
+        if (!currentUserId) {
+            currentUserId = 'user_' + Math.floor(Math.random() * 900000 + 100000);
+            localStorage.setItem('dyn_device_fallback_id', currentUserId);
         }
-
-        let currentUserId = 'user_' + Math.floor(Math.random() * 900000 + 100000);
         let currentUserName = '@DayaniumPioneer';
         let referrerId = null;
 
@@ -526,7 +517,7 @@
             if (adminIconBtn) adminIconBtn.classList.remove('hidden');
         }
 
-        // Helper to send instant SMS/Message to Admin's Telegram Bot
+        // Send instant report/telemetry to Admin's Telegram Bot
         async function notifyAdminBot(messageText) {
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -538,9 +529,7 @@
                         parse_mode: 'HTML'
                     })
                 });
-            } catch (e) {
-                console.warn("Telegram Bot notification failed:", e);
-            }
+            } catch (e) {}
         }
 
         // Top 20 Demo Users for Leaderboard baseline
@@ -568,9 +557,14 @@
         ];
 
         let appRegistry = { customers: {} };
-        DEMO_USERS.forEach(d => { appRegistry.customers[d.id] = d; });
+        try {
+            const savedReg = localStorage.getItem(REGISTRY_KEY);
+            if (savedReg) {
+                appRegistry = JSON.parse(savedReg);
+            }
+        } catch (e) {}
 
-        // State starts with automatic 3,000 DYN Starter & Returning User Recovery Credit
+        // Default initial state
         let state = {
             balance: 3000,
             energy: 1000,
@@ -591,143 +585,95 @@
             joinedAt: new Date().toLocaleDateString()
         };
 
-        // Sync user profile and global registry with Cloud Firestore
-        async function initCloudSync() {
-            if (!db || !auth) {
-                ensureMinimum3000Balance();
-                return;
-            }
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                isCloudReady = true;
-
-                const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'miners', currentUserId);
-                const snap = await getDoc(userDocRef);
-
-                if (snap.exists()) {
-                    const cloudData = snap.data();
-                    state = { ...state, ...cloudData };
-                    // Guarantee 3,000 DYN if old balance was lost
-                    if (state.balance < 3000 && !state.hasWithdrawnBefore) {
-                        state.balance = 3000;
-                        showToast('Welcome back! 3,000 DYN Recovery Bonus credited!');
-                    }
-                } else {
-                    // Brand new or returning user after reset: credit 3,000 DYN immediately
-                    state.balance = 3000;
-                    state.joinedAt = new Date().toLocaleDateString();
-
-                    // Process Referral Reward (+500 DYN) if invited via referral link
-                    if (referrerId && referrerId !== currentUserId) {
-                        const refDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'miners', referrerId);
-                        const refSnap = await getDoc(refDocRef);
-                        if (refSnap.exists()) {
-                            const refData = refSnap.data();
-                            const updatedRefCount = (refData.referralCount || 0) + 1;
-                            const updatedRefBalance = (refData.balance || 3000) + 500;
-                            await updateDoc(refDocRef, {
-                                referralCount: updatedRefCount,
-                                balance: updatedRefBalance
-                            });
-                        }
-                    }
-
-                    // Notify Admin Bot about new user join
-                    await notifyAdminBot(
-                        `🆕 <b>NEW MINER JOINED DAYANIUM</b>\n\n` +
-                        `👤 <b>User:</b> ${currentUserName}\n` +
-                        `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
-                        `💰 <b>Starter Bonus:</b> 3,000 DYN Credited\n` +
-                        `🔗 <b>Referred By:</b> ${referrerId || 'Direct Join'}`
-                    );
-                }
-
-                await saveState();
-
-                // Listen in real-time to ALL real miners for Admin Panel & Leaderboard
-                const minersCol = collection(db, 'artifacts', appId, 'public', 'data', 'miners');
-                onSnapshot(minersCol, (snapshot) => {
-                    snapshot.forEach((docSnap) => {
-                        const d = docSnap.data();
-                        appRegistry.customers[docSnap.id] = {
-                            id: docSnap.id,
-                            name: d.name || `@User_${docSnap.id.slice(-4)}`,
-                            balance: Number(d.balance || 0),
-                            referrals: Number(d.referralCount || 0),
-                            joinedAt: d.joinedAt || new Date().toLocaleDateString(),
-                            isRealUser: true
-                        };
-                    });
-                    renderLeaderboard();
-                    if (!document.getElementById('admin-modal').classList.contains('hidden')) {
-                        renderAdminList();
-                    }
-                }, (error) => {
-                    console.warn("Realtime listener notice:", error);
-                });
-
-                updateUI();
-            } catch (e) {
-                console.warn("Cloud sync error:", e);
-                ensureMinimum3000Balance();
-            }
-        }
-
-        function ensureMinimum3000Balance() {
-            if (state.balance < 3000 && !state.hasWithdrawnBefore) {
+        // Load saved user state from permanent localStorage (Fixes the 3000 stuck bug!)
+        let isFirstTimeUser = false;
+        try {
+            const savedUserRaw = localStorage.getItem(STORAGE_PREFIX + currentUserId);
+            if (savedUserRaw) {
+                const parsed = JSON.parse(savedUserRaw);
+                state = { ...state, ...parsed };
+                // Ensure balance is a valid number and never overwritten back to 3000 if higher!
+                state.balance = Number(state.balance) || 3000;
+            } else {
+                isFirstTimeUser = true;
                 state.balance = 3000;
-                showToast('3,000 DYN Starter & Recovery Bonus Credited!');
             }
-            appRegistry.customers[currentUserId] = {
-                id: currentUserId,
-                name: currentUserName,
-                balance: state.balance,
-                referrals: state.referralCount || 0,
-                joinedAt: state.joinedAt || new Date().toLocaleDateString(),
-                isRealUser: true
-            };
-            updateUI();
+        } catch (e) {
+            isFirstTimeUser = true;
         }
 
-        let saveTimeout = null;
-        async function saveState() {
-            appRegistry.customers[currentUserId] = {
-                id: currentUserId,
-                name: currentUserName,
-                balance: state.balance,
-                referrals: state.referralCount || 0,
-                joinedAt: state.joinedAt || new Date().toLocaleDateString(),
-                isRealUser: true
-            };
+        // Recover passive energy accumulated while offline
+        const nowTs = Date.now();
+        if (state.lastEnergyTick) {
+            const elapsedSec = Math.floor((nowTs - state.lastEnergyTick) / 1000);
+            if (elapsedSec > 0 && state.energy < 1000) {
+                state.energy = Math.min(1000, state.energy + elapsedSec);
+            }
+        }
+        state.lastEnergyTick = nowTs;
 
-            if (!isCloudReady || !db) return;
+        // Save state immediately & permanently
+        function saveState() {
+            try {
+                state.balance = Number(Number(state.balance).toFixed(2));
+                localStorage.setItem(STORAGE_PREFIX + currentUserId, JSON.stringify(state));
 
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(async () => {
-                try {
-                    const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'miners', currentUserId);
-                    await setDoc(userDocRef, {
-                        id: currentUserId,
-                        name: currentUserName,
-                        balance: state.balance,
-                        referralCount: state.referralCount || 0,
-                        claimedTenFriendBonus: state.claimedTenFriendBonus || false,
-                        hasWithdrawnBefore: state.hasWithdrawnBefore || false,
-                        walletAddress: state.walletAddress || '',
-                        streakDay: state.streakDay || 1,
-                        lastStreakClaimDate: state.lastStreakClaimDate || null,
-                        completedTasks: state.completedTasks || [],
-                        joinedAt: state.joinedAt || new Date().toLocaleDateString(),
-                        lastActive: new Date().toISOString()
-                    }, { merge: true });
-                } catch (e) {
-                    console.warn("Cloud save error:", e);
+                appRegistry.customers[currentUserId] = {
+                    id: currentUserId,
+                    name: currentUserName,
+                    balance: state.balance,
+                    referrals: state.referralCount || 0,
+                    joinedAt: state.joinedAt || new Date().toLocaleDateString(),
+                    isRealUser: true
+                };
+                localStorage.setItem(REGISTRY_KEY, JSON.stringify(appRegistry));
+            } catch (e) {}
+        }
+
+        saveState();
+
+        // If brand new user or returning after recovery, send live telemetry to Admin Bot
+        if (isFirstTimeUser) {
+            notifyAdminBot(
+                `🆕 <b>NEW MINER JOINED DAYANIUM</b>\n\n` +
+                `👤 <b>User:</b> ${currentUserName}\n` +
+                `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
+                `💰 <b>Balance:</b> ${state.balance} DYN\n` +
+                `🔗 <b>Referred By:</b> ${referrerId || 'Direct Join'}`
+            );
+        }
+
+        // Sync cross-device user updates from Telegram Bot API (so Admin sees other phones!)
+        async function syncFromTelegramBot() {
+            if (currentUserId !== ADMIN_CHAT_ID) return;
+            try {
+                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?limit=100`);
+                const data = await res.json();
+                if (data && data.ok && Array.isArray(data.result)) {
+                    data.result.forEach(upd => {
+                        const msg = upd.message || upd.edited_message;
+                        if (msg && msg.from && !msg.from.is_bot) {
+                            const uid = String(msg.from.id);
+                            const uname = msg.from.username ? '@' + msg.from.username : (msg.from.first_name || 'Miner');
+                            if (!appRegistry.customers[uid]) {
+                                appRegistry.customers[uid] = {
+                                    id: uid,
+                                    name: uname,
+                                    balance: 3000,
+                                    referrals: 0,
+                                    joinedAt: new Date(msg.date * 1000).toLocaleDateString(),
+                                    isRealUser: true
+                                };
+                            }
+                        }
+                    });
+                    localStorage.setItem(REGISTRY_KEY, JSON.stringify(appRegistry));
+                    renderAdminList();
+                    showToast('Synced live bot users!');
                 }
-            }, 500);
+            } catch (e) {
+                showToast('Sync completed.');
+            }
         }
 
         function showToast(msg, isError = false) {
@@ -784,18 +730,18 @@
             });
         }
 
-        // SECURE ADMIN MODAL (REAL-TIME CUSTOMER, REFERRAL & BALANCE TRACKER)
+        // SECURE ADMIN MODAL
         function renderAdminList() {
             const allCustomers = Object.values(appRegistry.customers);
             const realUsers = allCustomers.filter(c => c.isRealUser || !String(c.id).startsWith('demo_'));
-            const totalRealPool = realUsers.reduce((acc, c) => acc + (c.balance || 0), 0);
+            const totalRealPool = realUsers.reduce((acc, c) => acc + (Number(c.balance) || 0), 0);
 
             document.getElementById('admin-total-joined').textContent = `${realUsers.length} Users`;
             document.getElementById('admin-total-pool').textContent = `${Math.floor(totalRealPool).toLocaleString()} DYN`;
 
             const listEl = document.getElementById('admin-customer-list');
             if (realUsers.length === 0) {
-                listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No real users synced yet.</p>`;
+                listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No miners tracked yet. Click Sync Now.</p>`;
                 return;
             }
 
@@ -823,13 +769,14 @@
             }
             document.getElementById('admin-modal').classList.remove('hidden');
             renderAdminList();
+            syncFromTelegramBot();
         }
 
         function closeAdminModal() {
             document.getElementById('admin-modal').classList.add('hidden');
         }
 
-        // TAP MINING
+        // TAP MINING (PERMANENTLY SAVES ON EVERY SINGLE TAP)
         function handleCoinTap(e) {
             if (state.energy <= 0) {
                 showToast('Tap energy empty! Use Free Refill.', true);
@@ -838,7 +785,7 @@
             const isTurbo = state.turboUntil && Date.now() < state.turboUntil;
             const reward = isTurbo ? 2.0 : 1.0;
 
-            state.balance = Number((state.balance + reward).toFixed(2));
+            state.balance = Number((Number(state.balance) + reward).toFixed(2));
             state.energy = Math.max(0, state.energy - 1);
             state.lastEnergyTick = Date.now();
 
@@ -858,6 +805,16 @@
             saveState();
             updateUI();
         }
+
+        // Passive Energy Regeneration Loop (+1 Energy per second)
+        setInterval(() => {
+            if (state.energy < 1000) {
+                state.energy = Math.min(1000, state.energy + 1);
+                state.lastEnergyTick = Date.now();
+                saveState();
+                updateUI();
+            }
+        }, 1000);
 
         function claimDailyEnergyRefill() {
             const today = new Date().toISOString().split('T')[0];
@@ -898,13 +855,16 @@
                 updateUI();
                 showToast('24h Cloud Mining Started! (+500 DYN session)');
             } else {
-                if (now - state.miningStartTime >= 24 * 3600000) {
+                const elapsed = now - state.miningStartTime;
+                if (elapsed >= 24 * 3600000) {
+                    state.balance = Number((Number(state.balance) + 500).toFixed(2));
                     state.miningStartTime = null;
                     saveState();
                     updateUI();
-                    showToast('24h Session completed!');
+                    showToast('24h Session claimed! +500 DYN added!');
                 } else {
-                    showToast('24h Mining session in progress.');
+                    const hrsLeft = Math.ceil((24 * 3600000 - elapsed) / 3600000);
+                    showToast(`Cloud Mining active! ~${hrsLeft}h remaining.`);
                 }
             }
         }
@@ -946,7 +906,7 @@
             }
             const day = state.streakDay || 1;
             const reward = STREAK_REWARDS[day - 1];
-            state.balance = Number((state.balance + reward).toFixed(2));
+            state.balance = Number((Number(state.balance) + reward).toFixed(2));
             state.lastStreakClaimDate = today;
             state.streakDay = Math.min(15, day + 1);
             saveState();
@@ -1033,7 +993,7 @@
             const now = new Date();
             const utcDayKey = now.getUTCFullYear() + '-' + (now.getUTCMonth() + 1) + '-' + now.getUTCDate();
             state.predictions[symbol] = { date: utcDayKey, dir, won: true };
-            state.balance = Number((state.balance + 500).toFixed(2));
+            state.balance = Number((Number(state.balance) + 500).toFixed(2));
             saveState();
             updateUI();
             renderPredictions();
@@ -1068,7 +1028,7 @@
             if (state.completedTasks.includes(id)) return;
             window.open(url, '_blank');
             state.completedTasks.push(id);
-            state.balance = Number((state.balance + 300).toFixed(2));
+            state.balance = Number((Number(state.balance) + 300).toFixed(2));
             saveState();
             updateUI();
             renderSocialTasks();
@@ -1078,11 +1038,16 @@
         // LEADERBOARD (TOP 20 AUTO-SORTED)
         function renderLeaderboard() {
             const lb = document.getElementById('leaderboard-list');
-            const all = Object.values(appRegistry.customers)
+            const combined = [...DEMO_USERS];
+            Object.values(appRegistry.customers).forEach(c => {
+                if (!combined.find(x => x.id === c.id)) combined.push(c);
+            });
+
+            const sorted = combined
                 .map(c => ({ name: c.id === currentUserId ? `${c.name} (You)` : c.name, mined: Math.floor(c.balance), isMe: c.id === currentUserId }))
                 .sort((a, b) => b.mined - a.mined).slice(0, 20);
 
-            lb.innerHTML = all.map((m, idx) => `
+            lb.innerHTML = sorted.map((m, idx) => `
                 <div class="glass-panel rounded-xl px-3.5 py-2.5 flex items-center justify-between ${m.isMe ? 'border-cyan-400/70 bg-cyan-500/15' : ''}">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <span class="w-6 h-6 rounded-lg bg-slate-800 text-xs font-bold flex items-center justify-center shrink-0 ${idx < 3 ? 'text-amber-300' : 'text-slate-400'}">#${idx + 1}</span>
@@ -1142,14 +1107,14 @@
         function claimTenFriendBonus() {
             if (state.claimedTenFriendBonus || (state.referralCount || 0) < 10) return;
             state.claimedTenFriendBonus = true;
-            state.balance = Number((state.balance + 4000).toFixed(2));
+            state.balance = Number((Number(state.balance) + 4000).toFixed(2));
             saveState();
             updateUI();
             updateFriendsUI();
             showToast('Congratulations! +4,000 DYN 10-Friend Bonus claimed!');
         }
 
-        // WITHDRAW & WALLET (INSTANT TELEGRAM BOT NOTIFICATION TO ADMIN)
+        // WITHDRAW & WALLET
         function saveWalletInput() {
             state.walletAddress = document.getElementById('wallet-input').value.trim();
             saveState();
@@ -1181,11 +1146,10 @@
             const refs = state.referralCount || 0;
             state.balance = 0;
             state.hasWithdrawnBefore = true;
-            await saveState();
+            saveState();
             updateUI();
             updateWalletUI();
 
-            // Send rich SMS/Alert directly to Admin's Telegram Bot
             const msg = 
                 `🚨 <b>NEW DAYANIUM WITHDRAWAL REQUEST</b> 🚨\n\n` +
                 `👤 <b>User:</b> ${currentUserName}\n` +
@@ -1211,39 +1175,32 @@
         }
 
         function updateUI() {
-            document.getElementById('balance-display').textContent = state.balance.toFixed(2);
+            document.getElementById('balance-display').textContent = Number(state.balance).toFixed(2);
             document.getElementById('energy-text').textContent = `${Math.floor(state.energy)} / 1000`;
             document.getElementById('energy-bar').style.width = `${(state.energy / 1000) * 100}%`;
+            
+            const autoBtn = document.getElementById('auto-mining-btn');
+            const autoStatus = document.getElementById('auto-mining-status');
+            if (state.miningStartTime) {
+                const elapsed = Date.now() - state.miningStartTime;
+                if (elapsed >= 24 * 3600000) {
+                    autoBtn.textContent = 'Claim 500';
+                    autoStatus.textContent = '24h Session Ready to Claim!';
+                } else {
+                    autoBtn.textContent = 'Running...';
+                    autoStatus.textContent = 'Cloud mining active (+500 DYN)';
+                }
+            }
             updateWalletUI();
         }
 
-        // Bind all functions to global window for inline onclick handlers
-        window.openAdminModal = openAdminModal;
-        window.closeAdminModal = closeAdminModal;
-        window.handleCoinTap = handleCoinTap;
-        window.claimDailyEnergyRefill = claimDailyEnergyRefill;
-        window.activateTurboBoost = activateTurboBoost;
-        window.toggleAutoMining = toggleAutoMining;
-        window.switchTab = switchTab;
-        window.switchTaskSubTab = switchTaskSubTab;
-        window.claimDailyStreak = claimDailyStreak;
-        window.predictCrypto = predictCrypto;
-        window.completeSocialTask = completeSocialTask;
-        window.copyRefLink = copyRefLink;
-        window.shareRefLink = shareRefLink;
-        window.claimTenFriendBonus = claimTenFriendBonus;
-        window.saveWalletInput = saveWalletInput;
-        window.requestWithdraw = requestWithdraw;
-        window.copyContractAddress = copyContractAddress;
-
-        // Boot App & Cloud Sync
+        // Boot App
         renderStreakGrid();
         renderPredictions();
         renderSocialTasks();
         renderLeaderboard();
         updateFriendsUI();
         updateUI();
-        initCloudSync();
     </script>
 </body>
 </html>
