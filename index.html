@@ -89,345 +89,235 @@
         <p id="toast-msg" class="text-xs font-medium text-slate-100 leading-snug"></p>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- TOP STICKY HEADER & NETWORK BADGE                                    -->
-    <!-- ===================================================================== -->
-    <header class="sticky top-0 z-30 bg-[#060A0F]/95 backdrop-blur-md border-b border-white/10 px-3.5 py-2.5">
-        <div class="max-w-md mx-auto flex items-center justify-between gap-2">
-            <!-- Left: Original Dayanium 'D' Logo & Title -->
-            <div class="flex items-center gap-2.5 min-w-0">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400/40 to-teal-600/40 p-[1.5px] shrink-0 shadow-md shadow-cyan-500/15">
-                    <div class="w-full h-full bg-[#090E14] rounded-[10px] flex items-center justify-center">
-                        <svg width="26" height="26" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <defs>
-                                <linearGradient id="miniCoinMetal" x1="25" y1="20" x2="95" y2="100" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#475569"/>
-                                    <stop offset="50%" stop-color="#1E293B"/>
-                                    <stop offset="100%" stop-color="#0F172A"/>
-                                </linearGradient>
-                                <linearGradient id="miniCoinNeon" x1="25" y1="20" x2="95" y2="100" gradientUnits="userSpaceOnUse">
-                                    <stop offset="0%" stop-color="#A5F3FC"/>
-                                    <stop offset="50%" stop-color="#22D3EE"/>
-                                    <stop offset="100%" stop-color="#0D9488"/>
-                                </linearGradient>
-                            </defs>
-                            <path d="M32 22H62C82.9868 22 100 39.0132 100 60C100 80.9868 82.9868 98 62 98H32V22Z" fill="url(#miniCoinMetal)" stroke="url(#miniCoinNeon)" stroke-width="5"/>
-                            <path d="M46 36H61C74.2548 36 85 46.7452 85 60C85 73.2548 74.2548 84 61 84H46V36Z" fill="#090E14" stroke="#67E8F9" stroke-width="3"/>
-                            <path d="M16 76C35 52 78 65 106 38" stroke="#CFFAFE" stroke-width="4.5" stroke-linecap="round"/>
-                            <path d="M22 86C46 68 78 74 102 52" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
-                        </svg>
-                    </div>
-                </div>
-                <div class="min-w-0">
-                    <h1 class="font-display text-xs font-bold text-white tracking-wide truncate">DAYANIUM MINER</h1>
-                    <p id="tg-username" class="text-[10px] text-cyan-400 truncate">@DayaniumPioneer</p>
-                </div>
+    <!-- ADMIN MODAL -->
+    <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-3xl p-5 border border-cyan-400/40 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
+                <h3 class="font-display text-base font-bold text-cyan-400"><i class="fa-solid fa-shield-halved mr-1.5"></i> Admin Control Panel</h3>
+                <button onclick="closeAdminModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center font-bold">×</button>
             </div>
-
-            <!-- Right: Premium BEP-20 Network Badge & Owner Live Stats Button -->
-            <div class="flex items-center gap-2 shrink-0">
-                <span class="px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 text-[10px] font-bold shadow-sm">
-                    BEP-20 Network
-                </span>
-                <button id="admin-panel-btn" onclick="openAdminModal()" class="hidden px-2.5 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold flex items-center gap-1">
-                    <i class="fa-solid fa-shield-halved"></i> Stats
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- ===================================================================== -->
-    <!-- OWNER PRIVATE LIVE MONITOR MODAL                                      -->
-    <!-- ===================================================================== -->
-    <div id="admin-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-md rounded-3xl p-5 border border-amber-400/45 max-h-[86vh] flex flex-col">
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                <div>
-                    <h3 class="font-display font-bold text-base text-amber-300 flex items-center gap-1.5">
-                        <i class="fa-solid fa-shield-halved"></i> Owner Live Monitor
-                    </h3>
-                    <p class="text-[11px] text-slate-400">Private view • Real-time joined users & balances</p>
-                </div>
-                <button onclick="closeAdminModal()" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2.5 my-3">
-                <div class="bg-slate-900/90 p-3 rounded-xl border border-white/10 text-center">
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-slate-900/90 p-3 rounded-2xl border border-white/10">
                     <p class="text-[10px] text-slate-400 uppercase">Total Joined Users</p>
-                    <p id="admin-total-users" class="font-display text-xl font-bold text-cyan-400 mt-0.5">0</p>
+                    <p id="admin-total-joined" class="font-display text-xl font-bold text-white mt-0.5">0</p>
                 </div>
-                <div class="bg-slate-900/90 p-3 rounded-xl border border-white/10 text-center">
+                <div class="bg-slate-900/90 p-3 rounded-2xl border border-white/10">
                     <p class="text-[10px] text-slate-400 uppercase">Total Mined Pool</p>
-                    <p id="admin-total-mined" class="font-display text-xl font-bold text-emerald-400 mt-0.5">0 DYN</p>
+                    <p id="admin-total-pool" class="font-display text-xl font-bold text-cyan-400 mt-0.5">0 DYN</p>
                 </div>
             </div>
-
-            <div class="flex items-center justify-between mb-2 px-1">
-                <span class="text-[11px] font-bold text-white">Live User Join & Mining Feed</span>
-                <button onclick="openAdminModal()" class="text-[10px] text-cyan-400 font-semibold">
-                    <i class="fa-solid fa-rotate mr-1"></i>Refresh
-                </button>
-            </div>
-
-            <div id="admin-users-list" class="overflow-y-auto space-y-2 flex-1 pr-1">
-                <!-- Loaded via JS -->
-            </div>
+            <p class="text-xs font-bold text-white mb-2"><i class="fa-solid fa-users mr-1 text-cyan-400"></i> Customer & Referral List:</p>
+            <div id="admin-customer-list" class="space-y-2 overflow-y-auto flex-1 pr-1"></div>
         </div>
     </div>
 
-    <!-- ===================================================================== -->
-    <!-- TAB 1: MINE SECTION                                                   -->
-    <!-- ===================================================================== -->
-    <main id="tab-mine" class="px-4 pt-4 max-w-md mx-auto space-y-4">
-
-        <!-- 1. Balance & Rank Summary Card -->
-        <div class="glass-panel rounded-3xl p-5 text-center relative overflow-hidden">
-            <div class="absolute -top-10 -right-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
-            <p class="text-[11px] uppercase tracking-wider text-slate-400 mb-1">Total Mined Balance</p>
-            <div class="flex items-baseline justify-center gap-2">
-                <span id="balance-display" class="font-display text-4xl font-bold text-white tracking-tight">0.00</span>
-                <span class="font-display text-lg font-bold text-cyan-400">DYN</span>
-            </div>
-            <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-cyan-500/25">
-                <i class="fa-solid fa-crown text-amber-400 text-xs"></i>
-                <span id="miner-rank" class="text-[11px] font-semibold text-cyan-300">Bronze Pioneer</span>
-            </div>
-            <div class="mt-2.5 flex items-center justify-center gap-3 text-[11px] text-slate-400">
-                <span><i class="fa-solid fa-bolt text-cyan-400 mr-1"></i>Rate: <strong class="text-white">20.83 DYN/hr</strong></span>
-                <span>•</span>
-                <span>Min Withdraw: <strong class="text-cyan-300">5,000 DYN</strong></span>
-            </div>
-        </div>
-
-        <!-- 2. Premium Promotional Banner ("Our trade is now live...") -->
-        <div class="glass-panel rounded-2xl p-3.5 border border-emerald-400/40 bg-gradient-to-r from-cyan-950/50 to-emerald-950/40 space-y-2.5">
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                    <i class="fa-solid fa-rocket"></i>
-                </div>
-                <div>
-                    <p class="text-xs font-bold text-emerald-300">✨ Our trade is now live. Our liquidity pool is open!</p>
-                    <p class="text-[10px] text-slate-300 mt-0.5">PancakeSwap Trading & Liquidity Pool Active on BEP-20</p>
-                </div>
-            </div>
-            <div class="flex items-center justify-between pt-2 border-t border-white/10 text-[11px]">
-                <div class="flex items-center gap-1.5">
-                    <span id="live-dyn-price" class="font-mono font-bold text-white">$0.0001255</span>
-                    <span id="live-dyn-change" class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">+3.36%</span>
-                </div>
-                <a href="https://dexscreener.com/bsc/0x38474d63c1e5f4c013d450a0eb08154dc30cbc97" target="_blank" class="px-3 py-1.5 rounded-xl bg-emerald-400 text-slate-950 font-bold text-[11px] flex items-center gap-1 shadow-md">
-                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> DexScreener
-                </a>
-            </div>
-        </div>
-
-        <!-- 3. Center Interactive Dayanium 'D' Coin (Tap-Tap 1,000 DYN Cap) -->
-        <div class="relative flex flex-col items-center justify-center py-2">
-            <div id="pulse-ring" class="hidden absolute w-52 h-52 rounded-full border-2 border-cyan-400/50 mining-ring pointer-events-none"></div>
-
-            <button id="tap-coin" onclick="handleCoinTap(event)" class="relative w-48 h-48 rounded-full bg-gradient-to-b from-[#131C28] to-[#080C12] border-4 border-cyan-400/65 coin-glow flex flex-col items-center justify-center cursor-pointer focus:outline-none">
-                <svg width="96" height="96" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- TOP HEADER WITH OFFICIAL DAYANIUM 3D LOGO -->
+    <header class="px-4 pt-4 pb-3 max-w-md mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+            <!-- Official Dayanium 3D Logo SVG Match -->
+            <div class="w-11 h-11 rounded-2xl bg-slate-950 p-1 border border-cyan-500/40 shadow-lg shadow-cyan-500/20 flex items-center justify-center">
+                <svg width="34" height="34" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <defs>
-                        <linearGradient id="coinMetal" x1="25" y1="20" x2="95" y2="100" gradientUnits="userSpaceOnUse">
-                            <stop offset="0%" stop-color="#475569"/>
-                            <stop offset="50%" stop-color="#1E293B"/>
+                        <linearGradient id="metalD" x1="16" y1="10" x2="48" y2="54" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#64748B"/>
+                            <stop offset="50%" stop-color="#334155"/>
                             <stop offset="100%" stop-color="#0F172A"/>
                         </linearGradient>
-                        <linearGradient id="coinNeon" x1="25" y1="20" x2="95" y2="100" gradientUnits="userSpaceOnUse">
+                        <linearGradient id="cyanNeon" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
                             <stop offset="0%" stop-color="#A5F3FC"/>
                             <stop offset="50%" stop-color="#22D3EE"/>
                             <stop offset="100%" stop-color="#0D9488"/>
                         </linearGradient>
                     </defs>
-                    <path d="M32 22H62C82.9868 22 100 39.0132 100 60C100 80.9868 82.9868 98 62 98H32V22Z" fill="url(#coinMetal)" stroke="url(#coinNeon)" stroke-width="3.5"/>
-                    <path d="M46 36H61C74.2548 36 85 46.7452 85 60C85 73.2548 74.2548 84 61 84H46V36Z" fill="#090E14" stroke="#67E8F9" stroke-width="2.2"/>
-                    <path d="M16 76C35 52 78 65 106 38" stroke="#CFFAFE" stroke-width="3.2" stroke-linecap="round"/>
-                    <path d="M22 86C46 68 78 74 102 52" stroke="#22D3EE" stroke-width="1.8" stroke-linecap="round" opacity="0.85"/>
+                    <!-- 3D Block Letter D -->
+                    <path d="M18 12H34C44 12 50 18 50 32C50 46 44 52 34 52H18V12Z" fill="url(#metalD)" stroke="url(#cyanNeon)" stroke-width="2.5"/>
+                    <path d="M25 19H34C40 19 43 23 43 32C43 41 40 45 34 45H25V19Z" fill="#090E14" stroke="#67E8F9" stroke-width="1.5"/>
+                    <!-- Glowing Orbital Energy Waves -->
+                    <path d="M8 42C16 28 42 36 56 20" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round"/>
+                    <path d="M10 47C20 32 46 41 58 25" stroke="#99F6E4" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
                 </svg>
-                <span id="tap-reward-label" class="text-[11px] font-semibold tracking-widest text-cyan-300 mt-1">TAP (+1.00 DYN)</span>
+            </div>
+            <div>
+                <h1 id="tg-username" class="font-display font-bold text-sm text-white">@DayaniumPioneer</h1>
+                <p class="text-[10px] text-cyan-400 font-medium">BEP-20 Verified Miner</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="openAdminModal()" class="w-9 h-9 rounded-xl bg-slate-800/80 border border-white/15 text-cyan-400 flex items-center justify-center text-sm shadow hover:bg-slate-700/80 transition-all" title="Admin Panel">
+                <i class="fa-solid fa-user-shield"></i>
             </button>
+            <div class="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-white/10 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-[11px] font-bold text-emerald-300">Mainnet Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===================================================================== -->
+    <!-- TAB 1: MINE (MAIN TAP INTERFACE)                                      -->
+    <!-- ===================================================================== -->
+    <section id="tab-mine" class="px-4 pt-2 max-w-md mx-auto space-y-4">
+        <div class="glass-panel rounded-3xl p-5 text-center relative overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Total DYN Balance</p>
+            <div class="flex items-center justify-center gap-2">
+                <span class="font-display text-4xl font-extrabold text-white" id="balance-display">3000.00</span>
+                <span class="text-cyan-400 font-bold text-sm">DYN</span>
+            </div>
+            <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-bold">
+                <i class="fa-solid fa-bolt text-amber-400"></i> Starter Bonus Credited
+            </div>
         </div>
 
-        <!-- 4. Tap Energy & Daily Free Refill (3/3) -->
-        <div class="glass-panel rounded-2xl p-3.5">
-            <div class="flex justify-between text-xs mb-1.5">
-                <span class="text-slate-300 font-semibold"><i class="fa-solid fa-fire text-amber-400 mr-1"></i>Tap Energy (1,000 DYN / Full Bar)</span>
-                <span id="energy-text" class="font-mono font-bold text-cyan-300">1000 / 1000</span>
+        <div class="flex flex-col items-center justify-center py-4 relative">
+            <div class="absolute w-56 h-56 rounded-full bg-cyan-500/10 blur-xl mining-ring pointer-events-none"></div>
+            <div onclick="handleCoinTap(event)" class="relative w-44 h-44 rounded-full bg-gradient-to-tr from-cyan-600 via-teal-500 to-emerald-400 p-1.5 cursor-pointer coin-glow flex items-center justify-center shadow-2xl">
+                <div class="w-full h-full bg-slate-950 rounded-full flex flex-col items-center justify-center p-4 border border-cyan-300/30">
+                    <svg width="68" height="68" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" class="drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">
+                        <path d="M18 12H34C44 12 50 18 50 32C50 46 44 52 34 52H18V12Z" fill="url(#metalD2)" stroke="url(#cyanNeon2)" stroke-width="2.5"/>
+                        <path d="M25 19H34C40 19 43 23 43 32C43 41 40 45 34 45H25V19Z" fill="#090E14" stroke="#67E8F9" stroke-width="1.5"/>
+                        <path d="M8 42C16 28 42 36 56 20" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round"/>
+                        <path d="M10 47C20 32 46 41 58 25" stroke="#99F6E4" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+                        <defs>
+                            <linearGradient id="metalD2" x1="16" y1="10" x2="48" y2="54" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#64748B"/>
+                                <stop offset="50%" stop-color="#334155"/>
+                                <stop offset="100%" stop-color="#0F172A"/>
+                            </linearGradient>
+                            <linearGradient id="cyanNeon2" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#A5F3FC"/>
+                                <stop offset="50%" stop-color="#22D3EE"/>
+                                <stop offset="100%" stop-color="#0D9488"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="font-display text-xs font-bold text-cyan-300 mt-1 tracking-widest uppercase">Tap to Mine</span>
+                </div>
             </div>
-            <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-white/5">
-                <div id="energy-bar" class="h-full bg-gradient-to-r from-cyan-400 to-teal-500 transition-all duration-150 rounded-full" style="width: 100%"></div>
+        </div>
+
+        <div class="glass-panel rounded-3xl p-4 space-y-3">
+            <div class="flex items-center justify-between text-xs font-bold">
+                <span class="text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-bolt text-cyan-400"></i> Tap Energy</span>
+                <span id="energy-text" class="font-mono text-cyan-400">1000 / 1000</span>
             </div>
-            <div class="flex justify-between items-center mt-2.5 pt-2.5 border-t border-white/10">
-                <button id="daily-refill-btn" onclick="claimDailyEnergyRefill()" class="text-[11px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1.5">
-                    <i class="fa-solid fa-bolt-lightning"></i>
-                    <span id="daily-refill-label">Refill Energy Free (3/3 Left)</span>
+            <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-white/10">
+                <div id="energy-bar" class="h-full bg-gradient-to-r from-cyan-400 to-teal-400 transition-all duration-150 rounded-full" style="width: 100%"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-1">
+                <button onclick="claimDailyEnergyRefill()" class="py-2.5 rounded-xl bg-slate-900 border border-white/10 text-cyan-300 font-bold text-xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-battery-full text-emerald-400"></i> Free Refill (3/day)
                 </button>
-                <span id="turbo-status-badge" class="hidden text-[11px] font-bold text-amber-300 animate-pulse">⚡ Turbo 2x Active</span>
+                <button onclick="activateTurboBoost()" class="py-2.5 rounded-xl bg-slate-900 border border-white/10 text-amber-300 font-bold text-xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-rocket text-amber-400"></i> Turbo 2x (1h)
+                </button>
             </div>
         </div>
 
-        <!-- 5. Hourly Turbo 2x Boost -->
-        <div class="glass-panel rounded-2xl p-3.5 border border-amber-400/30 bg-gradient-to-r from-amber-950/35 to-slate-900/90 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-2.5">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/30 text-amber-400 flex items-center justify-center shrink-0 text-base">
-                    <i class="fa-solid fa-bolt"></i>
+        <div class="glass-panel-emerald rounded-3xl p-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-lg">
+                    <i class="fa-solid fa-cloud"></i>
                 </div>
                 <div>
-                    <p class="text-xs font-bold text-white">Hourly Turbo 2x Boost</p>
-                    <p class="text-[10px] text-slate-300">Double tap speed (<strong class="text-amber-300">+2.00 DYN/tap</strong>) for 1 hour!</p>
+                    <h3 class="font-display font-bold text-sm text-white">24h Cloud Mining</h3>
+                    <p class="text-[11px] text-emerald-300 mt-0.5">Earn +500 DYN per automated session</p>
                 </div>
             </div>
-            <button id="turbo-btn" onclick="activateTurboBoost()" class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 font-bold text-xs shrink-0 shadow-md">
-                Activate 2x
+            <button onclick="toggleAutoMining()" class="px-4 py-2.5 rounded-xl bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20">
+                Start 24h
             </button>
         </div>
-
-        <!-- 6. 24-Hour Auto Mining Control -->
-        <div class="glass-panel rounded-3xl p-4">
-            <div class="flex items-center justify-between mb-3">
-                <div>
-                    <p class="text-[11px] text-slate-400">24h Cloud Mining Status</p>
-                    <p id="mining-status-text" class="text-xs font-bold text-white mt-0.5">Ready to start 24h session</p>
-                </div>
-                <span id="mining-timer" class="font-mono text-sm font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/25">24:00:00</span>
-            </div>
-            <button id="mine-action-btn" onclick="toggleAutoMining()" class="w-full py-3.5 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-cyan-300 via-cyan-400 to-teal-500 hover:opacity-95 transition-all shadow-lg shadow-cyan-500/20">
-                <i class="fa-solid fa-play mr-1.5"></i> Start 24h Mining (+500 DYN)
-            </button>
-        </div>
-    </main>
+    </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 2: TASKS SECTION (SUB-TABS: STREAK, PREDICTION, SOCIAL TASKS)     -->
+    <!-- TAB 2: TASKS SECTION (STREAK, UTC PREDICTION & SOCIAL)                -->
     <!-- ===================================================================== -->
-    <section id="tab-tasks" class="hidden px-4 pt-4 max-w-md mx-auto space-y-4">
-
-        <!-- 3-Way Sub-Navigation Switcher -->
-        <div class="glass-panel rounded-2xl p-1.5 grid grid-cols-3 gap-1.5">
-            <button onclick="switchTaskSubTab('streak')" id="subnav-streak" class="py-2.5 px-2 rounded-xl text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/35 transition-all">
-                <i class="fa-solid fa-calendar-check text-amber-400 mr-1"></i> 15-Day Streak
-            </button>
-            <button onclick="switchTaskSubTab('predict')" id="subnav-predict" class="py-2.5 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">
-                <i class="fa-solid fa-chart-line text-emerald-400 mr-1"></i> Prediction
-            </button>
-            <button onclick="switchTaskSubTab('social')" id="subnav-social" class="py-2.5 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">
-                <i class="fa-solid fa-list-check text-cyan-400 mr-1"></i> Social Tasks
-            </button>
+    <section id="tab-tasks" class="hidden px-4 pt-2 max-w-md mx-auto space-y-4">
+        <div class="grid grid-cols-3 gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-white/10">
+            <button onclick="switchTaskSubTab('streak')" id="subnav-streak" class="py-2.5 px-2 rounded-xl text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/35 transition-all">Daily Streak</button>
+            <button onclick="switchTaskSubTab('predict')" id="subnav-predict" class="py-2.5 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">Crypto Predict</button>
+            <button onclick="switchTaskSubTab('social')" id="subnav-social" class="py-2.5 px-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">Social Tasks</button>
         </div>
 
-        <!-- SUB-TAB A: 15-DAY DAILY STREAK (TOTAL 10,000 DYN) -->
+        <!-- STREAK SUB-TAB -->
         <div id="task-sec-streak" class="space-y-4">
-            <div class="glass-panel rounded-3xl p-4 border border-amber-400/30 bg-gradient-to-br from-amber-950/25 to-slate-900/90">
-                <div class="flex items-center justify-between mb-1.5">
-                    <h2 class="font-display text-base font-bold text-white flex items-center gap-1.5">
-                        <i class="fa-solid fa-fire text-amber-400"></i> 15-Day Daily Check-In
-                    </h2>
-                    <span id="streak-day-badge" class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
-                        Day 1 / 15
-                    </span>
+            <div class="glass-panel rounded-3xl p-5 text-center">
+                <div class="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-300 text-2xl mx-auto mb-3 shadow-lg">
+                    <i class="fa-solid fa-calendar-days"></i>
                 </div>
-                <p class="text-[11px] text-slate-300 mb-3 leading-relaxed">
-                    Check in daily for <strong class="text-white">15 consecutive days</strong>! Total reaches <strong class="text-amber-300">10,000 DYN total</strong> on Day 15!
-                </p>
-
-                <!-- 15-Day Grid -->
-                <div id="streak-grid" class="grid grid-cols-5 gap-2 mb-4">
-                    <!-- Rendered via JS -->
+                <h2 class="font-display text-lg font-bold text-white">15-Day Daily Check-in Streak</h2>
+                <p class="text-xs text-slate-300 mt-1">Claim your daily DYN reward consistently to maximize earnings!</p>
+                <div class="my-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-cyan-300 font-bold text-xs" id="streak-day-badge">
+                    Day 1 / 15
                 </div>
-
-                <button id="claim-streak-btn" onclick="claimDailyStreak()" class="w-full py-3.5 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 shadow-lg transition-all">
-                    <i class="fa-solid fa-gift mr-1.5"></i> Claim Day 1 Reward (+100 DYN)
+                <div id="streak-grid" class="grid grid-cols-5 gap-2 mb-4"></div>
+                <button id="claim-streak-btn" onclick="claimDailyStreak()" class="w-full py-3.5 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-300 to-orange-400 shadow-lg">
+                    Claim Today's Reward
                 </button>
             </div>
         </div>
 
-        <!-- SUB-TAB B: CRYPTO PREDICTION (BTC, ETH, SOL - 500 DYN EACH) -->
+        <!-- PREDICTION SUB-TAB -->
         <div id="task-sec-predict" class="hidden space-y-4">
             <div class="glass-panel rounded-3xl p-4 border border-cyan-400/30">
-                <div class="flex items-center justify-between mb-1">
-                    <h2 class="font-display text-base font-bold text-white flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-line text-cyan-400"></i> Crypto Price Prediction
-                    </h2>
-                    <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/35 text-cyan-300 text-[10px] font-bold">
-                        +500 DYN Each
-                    </span>
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-display font-bold text-sm text-white flex items-center gap-1.5">
+                        <i class="fa-solid fa-chart-candlestick text-cyan-400"></i> UTC Live Crypto Prediction
+                    </h3>
+                    <span id="utc-clock" class="font-mono text-[11px] text-cyan-300 bg-slate-900 px-2.5 py-1 rounded-lg border border-white/10">00:00:00 UTC</span>
                 </div>
-                <p class="text-[11px] text-slate-300 mb-3">
-                    Predict <strong class="text-emerald-400">UP</strong> or <strong class="text-rose-400">DOWN</strong> for Bitcoin, Ethereum & Solana! Win <strong class="text-white">+500 DYN</strong> for each correct prediction!
-                </p>
-
-                <div id="prediction-list" class="space-y-3">
-                    <!-- Rendered via JS -->
-                </div>
+                <p class="text-xs text-slate-300 mb-3">Predict daily price direction for BTC, ETH, and SOL using live international exchange rates. Earn +500 DYN per correct prediction!</p>
+                <div id="prediction-list" class="space-y-3"></div>
             </div>
         </div>
 
-        <!-- SUB-TAB C: SOCIAL TASKS (+300 DYN EACH) -->
-        <div id="task-sec-social" class="hidden space-y-4">
-            <div class="glass-panel rounded-3xl p-4 border border-cyan-400/30">
-                <div class="flex items-center justify-between mb-1">
-                    <h2 class="font-display text-base font-bold text-white flex items-center gap-1.5">
-                        <i class="fa-solid fa-list-check text-cyan-400"></i> Official Social Tasks
-                    </h2>
-                    <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/35 text-cyan-300 text-[10px] font-bold">
-                        +300 DYN Each
-                    </span>
-                </div>
-                <p class="text-[11px] text-slate-300 mb-3">
-                    Follow our official Telegram channel, X (Twitter), and visit our website to earn <strong class="text-white">+300 DYN</strong> per task!
-                </p>
-
-                <div id="social-tasks-list" class="space-y-3">
-                    <!-- Rendered via JS -->
-                </div>
+        <!-- SOCIAL TASKS SUB-TAB -->
+        <div id="task-sec-social" class="hidden space-y-3">
+            <div class="glass-panel rounded-3xl p-4">
+                <h3 class="font-display text-sm font-bold text-white mb-1"><i class="fa-solid fa-bullhorn text-cyan-400 mr-1.5"></i> Official Social Channels</h3>
+                <p class="text-xs text-slate-300 mb-3">Complete these tasks to earn instant DYN rewards.</p>
+                <div id="social-tasks-list" class="space-y-2.5"></div>
             </div>
         </div>
     </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 3: 1M PRIZE GIVEAWAY & TOP 20 LIVE LEADERBOARD                    -->
+    <!-- TAB 3: 1M PRIZE GIVEAWAY & TOP 20 AUTO-SORTED LEADERBOARD             -->
     <!-- ===================================================================== -->
-    <section id="tab-giveaway" class="hidden px-4 pt-4 max-w-md mx-auto space-y-4">
-
-        <!-- Giveaway Banner -->
+    <section id="tab-giveaway" class="hidden px-4 pt-2 max-w-md mx-auto space-y-4">
         <div class="glass-panel rounded-3xl p-5 border border-amber-400/35 bg-gradient-to-br from-amber-950/30 to-slate-900/90 text-center relative overflow-hidden">
             <div class="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-2xl mx-auto mb-3 shadow-lg">
                 <i class="fa-solid fa-trophy"></i>
             </div>
             <h2 class="font-display text-xl font-bold text-white">1,000,000 DYN Prize Pool</h2>
             <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                Top 10 global miners share <strong class="text-amber-300">1,000,000 DYN</strong>! (1st: 300k, 2nd: 200k, 3rd: 150k, 4th–10th: 50k each).
+                Top 20 global miners share <strong class="text-amber-300">1,000,000 DYN</strong>! (1st: 300k, 2nd: 200k, 3rd: 150k, 4th–20th: 20k each).
             </p>
         </div>
 
-        <!-- Top 20 Auto-Sorted Live Leaderboard -->
         <div>
             <div class="flex items-center justify-between mb-2.5 px-1">
-                <h3 class="font-display font-bold text-sm text-white">Top 20 Miners Live Ranking</h3>
+                <h3 class="font-display font-bold text-sm text-white">Top 20 Global Miners Live Ranking</h3>
                 <span class="text-[11px] text-cyan-400 font-semibold">
                     <i class="fa-solid fa-arrow-up-wide-short mr-1"></i>Auto-Sorted Live
                 </span>
             </div>
-            <div id="leaderboard-list" class="space-y-2">
-                <!-- Rendered via JS -->
-            </div>
+            <div id="leaderboard-list" class="space-y-2"></div>
         </div>
     </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 4: FRIENDS (REFERRAL PROGRAM & 3,000 DYN MILESTONE)               -->
+    <!-- TAB 4: FRIENDS SECTION                                                -->
     <!-- ===================================================================== -->
-    <section id="tab-friends" class="hidden px-4 pt-4 max-w-md mx-auto space-y-4">
-
+    <section id="tab-friends" class="hidden px-4 pt-2 max-w-md mx-auto space-y-4">
         <div class="glass-panel rounded-3xl p-5 text-center">
             <div class="w-14 h-14 rounded-2xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-2xl mx-auto mb-3">
                 <i class="fa-solid fa-users"></i>
             </div>
             <h2 class="font-display text-xl font-bold text-white">Invite Friends & Earn</h2>
             <p class="text-xs text-slate-300 mt-1.5 leading-relaxed">
-                Earn <strong class="text-cyan-400">+500 DYN</strong> per friend (1 to 10) + <strong class="text-amber-300">+3,000 DYN</strong> bonus when you invite <strong class="text-white">10 friends</strong>!
+                Earn <strong class="text-cyan-400">+500 DYN</strong> per friend + <strong class="text-amber-300">+4,000 DYN</strong> bonus when you reach <strong class="text-white">10 friends</strong>!
             </p>
 
             <div class="grid grid-cols-2 gap-3 my-4">
@@ -459,15 +349,11 @@
                 </span>
             </div>
             <p class="text-[11px] text-slate-400 mb-3">
-                Friends 1–10: <strong class="text-cyan-300">+500 DYN each</strong> • Reach 10 Friends: <strong class="text-amber-300">+3,000 DYN Bonus!</strong>
+                Friends 1–9: <strong class="text-cyan-300">+500 DYN each</strong> • Reach 10 Friends: <strong class="text-amber-300">+4,000 DYN Milestone Bonus!</strong>
             </p>
-
-            <div id="ref-milestone-grid" class="grid grid-cols-5 gap-2 mb-3.5">
-                <!-- Rendered via JS -->
-            </div>
-
+            <div id="ref-milestone-grid" class="grid grid-cols-5 gap-2 mb-3.5"></div>
             <button id="claim-ref-milestone-btn" onclick="claimTenFriendBonus()" class="w-full py-3 rounded-xl font-bold text-xs bg-slate-800 text-slate-400 border border-white/10 transition-all">
-                <i class="fa-solid fa-lock mr-1.5"></i> Invite 10 Friends to Claim +3,000 DYN Bonus
+                <i class="fa-solid fa-lock mr-1.5"></i> Invite 10 Friends to Claim +4,000 DYN Bonus
             </button>
         </div>
     </section>
@@ -475,9 +361,7 @@
     <!-- ===================================================================== -->
     <!-- TAB 5: WITHDRAW & DEXSCREENER LIVE PORTFOLIO                          -->
     <!-- ===================================================================== -->
-    <section id="tab-wallet" class="hidden px-4 pt-4 max-w-md mx-auto space-y-4">
-
-        <!-- Withdraw Card -->
+    <section id="tab-wallet" class="hidden px-4 pt-2 max-w-md mx-auto space-y-4">
         <div class="glass-panel rounded-3xl p-5">
             <div class="flex items-center justify-between mb-3">
                 <h2 class="font-display text-lg font-bold text-white">Withdraw DYN</h2>
@@ -487,10 +371,10 @@
             <div class="bg-slate-900/85 rounded-2xl p-3.5 border border-white/10 mb-4">
                 <div class="flex justify-between text-xs mb-1.5">
                     <span class="text-slate-400">Minimum Withdraw Goal</span>
-                    <span id="withdraw-progress-text" class="font-mono font-bold text-cyan-400">0 / 5,000 DYN</span>
+                    <span id="withdraw-progress-text" class="font-mono font-bold text-cyan-400">3,000 / 15,000 DYN</span>
                 </div>
                 <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div id="withdraw-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all duration-300 rounded-full" style="width: 0%"></div>
+                    <div id="withdraw-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all duration-300 rounded-full" style="width: 20%"></div>
                 </div>
             </div>
 
@@ -499,14 +383,12 @@
                     <label class="block text-xs font-medium text-slate-300 mb-1.5">Your BEP-20 Wallet Address (MetaMask / Trust Wallet)</label>
                     <input id="wallet-input" type="text" oninput="saveWalletInput()" placeholder="0x..." class="w-full px-3.5 py-3 rounded-xl bg-slate-900 border border-white/15 text-xs font-mono text-white focus:outline-none focus:border-cyan-400">
                 </div>
-
                 <button onclick="requestWithdraw()" class="w-full py-3.5 rounded-xl font-bold text-sm text-slate-950 bg-gradient-to-r from-cyan-300 via-cyan-400 to-teal-500 hover:opacity-95 transition-all shadow-lg shadow-cyan-500/20">
-                    <i class="fa-solid fa-paper-plane mr-1.5"></i> Request Withdraw (Min 5,000 DYN)
+                    <i class="fa-solid fa-paper-plane mr-1.5"></i> Request Withdraw (Min 15,000 DYN)
                 </button>
             </div>
         </div>
 
-        <!-- Live DexScreener Market Price & Portfolio Value Card -->
         <div class="glass-panel-emerald rounded-3xl p-4">
             <div class="flex items-center justify-between mb-2">
                 <p class="font-bold text-xs text-emerald-300 flex items-center gap-1.5">
@@ -527,24 +409,18 @@
                         <p id="wallet-live-mcap" class="font-mono text-xs font-bold text-cyan-300 mt-0.5">$12,559</p>
                     </div>
                 </div>
-                <div class="flex items-center justify-between mt-1.5 pt-1.5 border-t border-white/10 text-[10px]">
-                    <span class="text-slate-400">1,000 DYN Live Value:</span>
-                    <span id="wallet-1k-value" class="text-cyan-300 font-bold font-mono">≈ $0.1255 USD</span>
-                </div>
             </div>
             <p class="text-[11px] text-slate-300">
-                Your current balance (<strong id="est-value-dyn" class="text-white">0 DYN</strong>) is worth <strong id="est-value-usd" class="text-emerald-300">$0.00</strong> at live market price!
+                Your current balance (<strong id="est-value-dyn" class="text-white">3,000 DYN</strong>) is worth <strong id="est-value-usd" class="text-emerald-300">$0.38</strong> at live market price!
             </p>
         </div>
 
-        <!-- Project Info & Official Links -->
         <div class="glass-panel rounded-3xl p-4 text-xs space-y-2.5">
             <p class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-circle-info text-cyan-400"></i> Important Project Information</p>
             <ul class="space-y-1.5 text-slate-300 list-disc pl-4 leading-relaxed">
                 <li><strong>Trading & Sell Launch:</strong> Public trading and token selling open on <span class="text-emerald-400 font-semibold">18 December 2026</span> via PancakeSwap.</li>
-                <li><strong>Minimum Withdraw:</strong> Once your balance reaches <span class="text-cyan-400 font-semibold">5,000 DYN</span>, you can withdraw directly to your MetaMask or Trust Wallet (BEP-20).</li>
+                <li><strong>Minimum Withdraw:</strong> Once your balance reaches <span class="text-cyan-400 font-semibold">15,000 DYN</span>, you can withdraw directly to your MetaMask or Trust Wallet (BEP-20).</li>
                 <li><strong>1,000,000 DYN Top 10 Bonus:</strong> The Top 10 global miners will share a 1,000,000 DYN reward pool.</li>
-                <li><strong>Total Supply:</strong> 100,000,000 DYN fixed supply on BNB Smart Chain.</li>
             </ul>
             <div class="pt-2 border-t border-white/10 flex items-center justify-between bg-slate-900 p-2.5 rounded-xl">
                 <code class="text-[11px] text-slate-300 truncate mr-2">0xdac720922a531574daC6D990e2cd1ff97883A294</code>
@@ -596,20 +472,48 @@
 
         const ADMIN_CHAT_ID = "9092264647";
         const BOT_TOKEN = "9002472348:AAH6AHtl-cbDagrWS87OPc6lx-fuc_0glz0";
-        const FIREBASE_DB_URL = "https://dayanium-miner-default-rtdb.firebaseio.com";
+        const STORAGE_KEY = 'dyn_miner_customer_list_v10';
 
-        const STORAGE_KEY = 'dyn_miner_official_clean_v1';
-        const MIN_WITHDRAW = 5000;
-        const MINING_DURATION_MS = 24 * 60 * 60 * 1000;
-        const MINING_REWARD_24H = 500;
-        const MAX_TAP_ENERGY = 1000;
-        const TAP_REWARD = 1.00;
-        const DAILY_MAX_REFILLS = 3;
-        const DEXSCREENER_API_URL = 'https://api.dexscreener.com/latest/dex/pairs/bsc/0x38474d63c1e5f4c013d450a0eb08154dc30cbc97';
-        const STREAK_REWARDS = [100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1300, 1700]; // Total 10,000 DYN
+        let currentUserId = 'user_' + Math.floor(Math.random() * 900000 + 100000);
+        let currentUserName = '@DayaniumPioneer';
+
+        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const user = tg.initDataUnsafe.user;
+            currentUserId = String(user.id);
+            currentUserName = user.username ? '@' + user.username : (user.first_name || 'Pioneer');
+            document.getElementById('tg-username').textContent = currentUserName;
+            document.getElementById('ref-link').textContent = `https://t.me/DayaniumOfficialBot/mine?startapp=${user.id}`;
+        }
+
+        // Top 20 Demo Users for Leaderboard
+        const DEMO_USERS = [
+            { id: 'demo_1', name: '@CryptoKing_99', balance: 48000, referrals: 14, joinedAt: '12/10/2025' },
+            { id: 'demo_2', name: '@SatoshiBoss', balance: 42100, referrals: 11, joinedAt: '12/11/2025' },
+            { id: 'demo_3', name: '@SolanaWhale', balance: 39500, referrals: 9, joinedAt: '12/12/2025' },
+            { id: 'demo_4', name: '@DayaniumElite', balance: 34200, referrals: 8, joinedAt: '12/13/2025' },
+            { id: 'demo_5', name: '@AlphaMiner', balance: 31000, referrals: 7, joinedAt: '12/14/2025' },
+            { id: 'demo_6', name: '@TelegramPioneer', balance: 27500, referrals: 6, joinedAt: '12/15/2025' },
+            { id: 'demo_7', name: '@BlockMaster', balance: 24200, referrals: 5, joinedAt: '12/16/2025' },
+            { id: 'demo_8', name: '@TokenHunter', balance: 21000, referrals: 4, joinedAt: '12/17/2025' },
+            { id: 'demo_9', name: '@CryptoNinja', balance: 18400, referrals: 3, joinedAt: '12/18/2025' },
+            { id: 'demo_10', name: '@MoonShot2026', balance: 16100, referrals: 3, joinedAt: '12/19/2025' },
+            { id: 'demo_11', name: '@BullRunGuy', balance: 14000, referrals: 2, joinedAt: '12/20/2025' },
+            { id: 'demo_12', name: '@Web3Gamer', balance: 12200, referrals: 2, joinedAt: '12/21/2025' },
+            { id: 'demo_13', name: '@DiamondHands', balance: 10500, referrals: 1, joinedAt: '12/22/2025' },
+            { id: 'demo_14', name: '@EtherLord', balance: 9100, referrals: 1, joinedAt: '12/23/2025' },
+            { id: 'demo_15', name: '@BinanceSquare', balance: 7900, referrals: 1, joinedAt: '12/24/2025' },
+            { id: 'demo_16', name: '@AirdropHunter', balance: 6800, referrals: 0, joinedAt: '12/25/2025' },
+            { id: 'demo_17', name: '@YieldFarmer', balance: 5700, referrals: 0, joinedAt: '12/26/2025' },
+            { id: 'demo_18', name: '@NodeRunner', balance: 4800, referrals: 0, joinedAt: '12/27/2025' },
+            { id: 'demo_19', name: '@MetaMaskUser', balance: 3900, referrals: 0, joinedAt: '12/28/2025' },
+            { id: 'demo_20', name: '@TrustWalletFan', balance: 3200, referrals: 0, joinedAt: '12/29/2025' }
+        ];
+
+        let appRegistry = { customers: {} };
+        DEMO_USERS.forEach(d => { appRegistry.customers[d.id] = d; });
 
         let state = {
-            balance: 0,
+            balance: 3000,
             energy: 1000,
             lastEnergyTick: Date.now(),
             miningStartTime: null,
@@ -623,78 +527,55 @@
             claimedTenFriendBonus: false,
             walletAddress: '',
             completedTasks: [],
-            predictions: {},
-            joinedAt: new Date().toLocaleDateString(),
-            referredByProcessed: false
-        };
-
-        let dynMarketData = {
-            priceUsd: 0.0001255,
-            change24h: 3.36,
-            marketCap: 12559
+            predictions: {}
         };
 
         try {
-            const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('dyn_miner_official_final_v2');
-            if (saved) {
-                state = { ...state, ...JSON.parse(saved) };
-                if (state.energy > MAX_TAP_ENERGY) state.energy = MAX_TAP_ENERGY;
+            const savedReg = localStorage.getItem('dyn_global_registry_v10');
+            if (savedReg) {
+                appRegistry = JSON.parse(savedReg);
+            }
+            const savedUser = localStorage.getItem(STORAGE_KEY + '_' + currentUserId);
+            if (savedUser) {
+                state = { ...state, ...JSON.parse(savedUser) };
+                if (state.energy > 1000) state.energy = 1000;
+            } else if (appRegistry.customers[currentUserId]) {
+                state.balance = appRegistry.customers[currentUserId].balance;
+                state.referralCount = appRegistry.customers[currentUserId].referrals || 0;
+            } else {
+                const isOldUser = Object.keys(appRegistry.customers).length > 20;
+                state.balance = isOldUser ? 3000 : 1000;
             }
         } catch (e) {}
 
-        let currentUserId = 'Unknown';
-        let currentUserName = '@DayaniumPioneer';
-        let directAppLink = 'https://t.me/DayaniumOfficialBot/mine';
-
-        if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            currentUserId = String(user.id);
-            currentUserName = user.username ? '@' + user.username : (user.first_name || 'Pioneer');
-            document.getElementById('tg-username').textContent = currentUserName;
-            directAppLink = `https://t.me/DayaniumOfficialBot/mine?startapp=${user.id}`;
-            document.getElementById('ref-link').textContent = directAppLink;
-
-            if (currentUserId === ADMIN_CHAT_ID) {
-                document.getElementById('admin-panel-btn').classList.remove('hidden');
-            }
-        }
-
-        const startParam = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param)
-            || new URLSearchParams(window.location.search).get('startapp');
-
-        if (startParam && startParam !== currentUserId && !state.referredByProcessed) {
-            state.referredByProcessed = true;
-            state.balance = Number((state.balance + 500).toFixed(2));
-            state.referralCount = (state.referralCount || 0) + 1;
-            saveState(true);
-            creditReferrerInCloud(startParam);
-            setTimeout(() => showToast('Welcome Referral Bonus! +500 DYN credited!'), 800);
-        }
-
-        if (state.walletAddress) {
-            document.getElementById('wallet-input').value = state.walletAddress;
-        }
-
-        let cloudSyncTimer = null;
-        function saveState(immediateCloud = false) {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-            } catch (e) {}
-
-            if (immediateCloud) {
-                if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
-                syncUserToCloud();
+        if (!appRegistry.customers[currentUserId]) {
+            const isOldUser = Object.keys(appRegistry.customers).length > 20;
+            const startingBonus = isOldUser ? 3000 : 1000;
+            appRegistry.customers[currentUserId] = {
+                id: currentUserId,
+                name: currentUserName,
+                balance: state.balance < startingBonus ? startingBonus : state.balance,
+                referrals: state.referralCount || 0,
+                joinedAt: new Date().toLocaleDateString()
+            };
+            if (state.balance < startingBonus) state.balance = startingBonus;
+        } else {
+            appRegistry.customers[currentUserId].name = currentUserName;
+            appRegistry.customers[currentUserId].referrals = state.referralCount || 0;
+            if (appRegistry.customers[currentUserId].balance > state.balance) {
+                state.balance = appRegistry.customers[currentUserId].balance;
             } else {
-                if (cloudSyncTimer) clearTimeout(cloudSyncTimer);
-                cloudSyncTimer = setTimeout(() => syncUserToCloud(), 4000);
+                appRegistry.customers[currentUserId].balance = state.balance;
             }
         }
 
-        function getTodayStr() { return new Date().toISOString().split('T')[0]; }
-        function getYesterdayStr() {
-            const d = new Date();
-            d.setUTCDate(d.getUTCDate() - 1);
-            return d.toISOString().split('T')[0];
+        function saveState() {
+            try {
+                appRegistry.customers[currentUserId].balance = state.balance;
+                appRegistry.customers[currentUserId].referrals = state.referralCount || 0;
+                localStorage.setItem('dyn_global_registry_v10', JSON.stringify(appRegistry));
+                localStorage.setItem(STORAGE_KEY + '_' + currentUserId, JSON.stringify(state));
+            } catch (e) {}
         }
 
         function showToast(msg, isError = false) {
@@ -702,30 +583,18 @@
             const icon = document.getElementById('toast-icon');
             const text = document.getElementById('toast-msg');
             if (!toast || !text) return;
-
             text.textContent = msg;
-            if (isError) {
-                icon.className = 'fa-solid fa-circle-exclamation text-rose-400 text-lg shrink-0';
-                toast.classList.replace('border-cyan-400/50', 'border-rose-400/50');
-            } else {
-                icon.className = 'fa-solid fa-circle-check text-cyan-400 text-lg shrink-0';
-                toast.classList.replace('border-rose-400/50', 'border-cyan-400/50');
-            }
-
+            icon.className = isError ? 'fa-solid fa-circle-exclamation text-rose-400 text-lg shrink-0' : 'fa-solid fa-circle-check text-cyan-400 text-lg shrink-0';
             toast.classList.remove('opacity-0', '-translate-y-12');
             clearTimeout(window._toastTimer);
-            window._toastTimer = setTimeout(() => {
-                toast.classList.add('opacity-0', '-translate-y-12');
-            }, 3000);
+            window._toastTimer = setTimeout(() => toast.classList.add('opacity-0', '-translate-y-12'), 3000);
         }
 
-        // TAB NAVIGATION
         function switchTab(tabName) {
             ['mine', 'tasks', 'giveaway', 'friends', 'wallet'].forEach(t => {
                 const sec = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
                 if (!sec || !nav) return;
-
                 if (t === tabName) {
                     sec.classList.remove('hidden');
                     nav.className = 'flex flex-col items-center justify-center py-2 rounded-xl text-cyan-400 bg-cyan-500/10 transition-all';
@@ -753,7 +622,6 @@
                 const sec = document.getElementById(`task-sec-${s}`);
                 const btn = document.getElementById(`subnav-${s}`);
                 if (!sec || !btn) return;
-
                 if (s === subName) {
                     sec.classList.remove('hidden');
                     btn.className = 'py-2.5 px-2 rounded-xl text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-400/35 transition-all';
@@ -764,14 +632,45 @@
             });
         }
 
-        // TAB 1: TAP MINING
+        // ADMIN MODAL WITH REFERRAL COUNT
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            const customers = Object.values(appRegistry.customers);
+            const totalPool = customers.reduce((acc, c) => acc + (c.balance || 0), 0);
+
+            document.getElementById('admin-total-joined').textContent = customers.length.toLocaleString();
+            document.getElementById('admin-total-pool').textContent = `${Math.floor(totalPool).toLocaleString()} DYN`;
+
+            const listEl = document.getElementById('admin-customer-list');
+            listEl.innerHTML = customers.sort((a, b) => b.balance - a.balance).map((c, idx) => `
+                <div class="bg-slate-950 p-3 rounded-2xl border border-white/10 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-6 h-6 rounded-lg bg-slate-900 text-xs font-bold flex items-center justify-center text-cyan-400 shrink-0">#${idx + 1}</span>
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-white truncate">${c.name}</p>
+                            <p class="text-[10px] font-mono text-slate-400 truncate">ID: ${c.id} • <span class="text-cyan-400 font-semibold"><i class="fa-solid fa-user-plus mr-0.5"></i> ${c.referrals || 0} Referrals</span></p>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <p class="font-mono text-xs font-bold text-emerald-400">${Math.floor(c.balance).toLocaleString()} DYN</p>
+                        <p class="text-[9px] text-slate-400">${c.joinedAt}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        // TAP MINING
         function handleCoinTap(e) {
             if (state.energy <= 0) {
-                showToast('Tap energy empty! Use Free Refill or wait for regen.', true);
+                showToast('Tap energy empty! Use Free Refill.', true);
                 return;
             }
-            const isTurboActive = state.turboUntil && Date.now() < state.turboUntil;
-            const reward = isTurboActive ? TAP_REWARD * 2 : TAP_REWARD;
+            const isTurbo = state.turboUntil && Date.now() < state.turboUntil;
+            const reward = isTurbo ? 2.0 : 1.0;
 
             state.balance = Number((state.balance + reward).toFixed(2));
             state.energy = Math.max(0, state.energy - 1);
@@ -779,7 +678,7 @@
 
             const plus = document.createElement('div');
             plus.className = 'floating-plus';
-            plus.textContent = isTurboActive ? '+2.00 DYN (2x)' : '+1.00 DYN';
+            plus.textContent = isTurbo ? '+2.00 DYN (2x)' : '+1.00 DYN';
             const x = e.clientX || (e.touches && e.touches[0].clientX) || (window.innerWidth / 2);
             const y = e.clientY || (e.touches && e.touches[0].clientY) || (window.innerHeight / 2);
             plus.style.left = `${Math.min(window.innerWidth - 115, Math.max(16, x - 35))}px`;
@@ -790,42 +689,38 @@
             if (tg && tg.HapticFeedback) {
                 try { tg.HapticFeedback.impactOccurred('light'); } catch (err) {}
             }
-            saveState(false);
+            saveState();
             updateUI();
         }
 
         function claimDailyEnergyRefill() {
-            const today = getTodayStr();
+            const today = new Date().toISOString().split('T')[0];
             if (state.refillDate !== today) {
                 state.refillDate = today;
                 state.refillsUsedToday = 0;
             }
-            if (state.refillsUsedToday >= DAILY_MAX_REFILLS) {
+            if (state.refillsUsedToday >= 3) {
                 showToast('All 3/3 daily free refills used today!', true);
                 return;
             }
-            if (state.energy >= MAX_TAP_ENERGY) {
-                showToast(`Tap Energy is already full (${MAX_TAP_ENERGY} / ${MAX_TAP_ENERGY})!`, true);
-                return;
-            }
-            state.energy = MAX_TAP_ENERGY;
+            state.energy = 1000;
             state.refillsUsedToday += 1;
             state.lastEnergyTick = Date.now();
-            saveState(true);
+            saveState();
             updateUI();
-            showToast(`Energy refilled to 1,000 / 1,000! (${DAILY_MAX_REFILLS - state.refillsUsedToday}/3 left)`);
+            showToast('Energy refilled to 1,000 / 1,000!');
         }
 
         function activateTurboBoost() {
             const now = Date.now();
             if (state.turboUntil && now < state.turboUntil) {
-                showToast('Hourly Turbo 2x Speed is already active!', true);
+                showToast('Turbo 2x already active!', true);
                 return;
             }
             state.turboUntil = now + (60 * 60 * 1000);
-            saveState(true);
+            saveState();
             updateUI();
-            showToast('Turbo 2x Speed activated for 1 hour! (+2.00 DYN/tap)');
+            showToast('Turbo 2x Speed activated for 1 hour!');
         }
 
         function toggleAutoMining() {
@@ -833,212 +728,153 @@
             if (!state.miningStartTime) {
                 state.miningStartTime = now;
                 state.lastMiningTick = now;
-                saveState(true);
+                saveState();
                 updateUI();
-                showToast('24h Cloud Mining Started! (+20.83 DYN/hr = 500 DYN)');
+                showToast('24h Cloud Mining Started! (+500 DYN session)');
             } else {
-                const elapsed = now - state.miningStartTime;
-                if (elapsed >= MINING_DURATION_MS) {
+                if (now - state.miningStartTime >= 24 * 3600000) {
                     state.miningStartTime = null;
-                    saveState(true);
+                    saveState();
                     updateUI();
-                    showToast('24h Session completed! Ready to start next session.');
+                    showToast('24h Session completed!');
                 } else {
-                    showToast('24h Mining in progress! Accumulating DYN automatically.');
+                    showToast('24h Mining session in progress.');
                 }
             }
         }
 
-        // TAB 2A: 15-DAY STREAK (TOTAL 10,000 DYN)
-        function validateStreakContinuity() {
-            const today = getTodayStr();
-            const yesterday = getYesterdayStr();
-            if (state.lastStreakClaimDate && state.lastStreakClaimDate !== today && state.lastStreakClaimDate !== yesterday) {
-                state.streakDay = 1;
-                saveState();
-            }
-        }
-
+        // STREAK
+        const STREAK_REWARDS = [100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1300, 1700];
         function renderStreakGrid() {
-            validateStreakContinuity();
-            const today = getTodayStr();
-            const claimedToday = state.lastStreakClaimDate === today;
-            const currentDay = state.streakDay || 1;
-
-            document.getElementById('streak-day-badge').textContent = `Day ${currentDay} / 15`;
+            const today = new Date().toISOString().split('T')[0];
+            const claimed = state.lastStreakClaimDate === today;
+            const day = state.streakDay || 1;
+            document.getElementById('streak-day-badge').textContent = `Day ${day} / 15`;
 
             const grid = document.getElementById('streak-grid');
-            let html = '';
-            for (let i = 1; i <= 15; i++) {
-                const reward = STREAK_REWARDS[i - 1];
-                const isCompleted = i < currentDay || (i === currentDay && claimedToday);
-                const isActiveToday = i === currentDay && !claimedToday;
-                const isDay15 = i === 15;
+            grid.innerHTML = STREAK_REWARDS.map((r, i) => {
+                const d = i + 1;
+                const done = d < day || (d === day && claimed);
+                const active = d === day && !claimed;
+                return `<div class="rounded-xl py-2 px-1 text-center border ${done ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300' : active ? 'bg-amber-500/25 border-amber-400 text-amber-300' : 'bg-slate-900 border-white/10 text-slate-400'}">
+                    <div class="text-[9px] font-bold">Day ${d}</div>
+                    <div class="text-[10px] font-bold mt-0.5">${done ? '✓' : `+${r}`}</div>
+                </div>`;
+            }).join('');
 
-                let cardStyle = 'bg-slate-900/85 border-white/10 text-slate-400';
-                if (isCompleted) cardStyle = 'bg-emerald-500/20 border-emerald-400/50 text-emerald-300';
-                else if (isActiveToday) cardStyle = 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-md shadow-amber-500/15';
-                else if (isDay15) cardStyle = 'bg-cyan-500/15 border-cyan-400/40 text-cyan-300';
-
-                html += `
-                    <div class="rounded-xl py-2 px-1 text-center border ${cardStyle}">
-                        <div class="text-[9px] font-bold uppercase tracking-tight">Day ${i}</div>
-                        <div class="text-[10px] font-display font-bold mt-0.5">${isCompleted ? '✓' : `+${reward}`}</div>
-                    </div>
-                `;
-            }
-            grid.innerHTML = html;
-
-            const claimBtn = document.getElementById('claim-streak-btn');
-            if (claimedToday) {
-                claimBtn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Today\'s Streak Claimed!';
-                claimBtn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/35';
+            const btn = document.getElementById('claim-streak-btn');
+            if (claimed) {
+                btn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> Today\'s Streak Claimed!';
+                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/35';
             } else {
-                const todayReward = STREAK_REWARDS[currentDay - 1];
-                claimBtn.innerHTML = `<i class="fa-solid fa-gift mr-1.5"></i> Claim Day ${currentDay} Reward (+${todayReward} DYN)`;
-                claimBtn.className = 'w-full py-3.5 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 shadow-lg transition-all';
+                btn.innerHTML = `<i class="fa-solid fa-gift mr-1.5"></i> Claim Day ${day} Reward (+${STREAK_REWARDS[day-1]} DYN)`;
+                btn.className = 'w-full py-3.5 rounded-2xl font-bold text-sm text-slate-950 bg-gradient-to-r from-amber-300 to-orange-400 shadow-lg';
             }
         }
 
         function claimDailyStreak() {
-            validateStreakContinuity();
-            const today = getTodayStr();
+            const today = new Date().toISOString().split('T')[0];
             if (state.lastStreakClaimDate === today) {
-                showToast('You already claimed today\'s check-in reward!', true);
+                showToast('Already claimed today!', true);
                 return;
             }
-            const currentDay = state.streakDay || 1;
-            const reward = STREAK_REWARDS[currentDay - 1];
+            const day = state.streakDay || 1;
+            const reward = STREAK_REWARDS[day - 1];
             state.balance = Number((state.balance + reward).toFixed(2));
             state.lastStreakClaimDate = today;
-
-            if (currentDay >= 15) {
-                showToast('15-Day Streak Completed! Total 10,000 DYN unlocked!');
-                state.streakDay = 1;
-            } else {
-                showToast(`Day ${currentDay} Check-In Claimed! +${reward} DYN added!`);
-                state.streakDay = currentDay + 1;
-            }
-
-            if (tg && tg.HapticFeedback) {
-                try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {}
-            }
-            saveState(true);
+            state.streakDay = Math.min(15, day + 1);
+            saveState();
             updateUI();
             renderStreakGrid();
+            showToast(`Day ${day} Reward Claimed! +${reward} DYN`);
         }
 
-        // TAB 2B: CRYPTO PREDICTION (BTC, ETH, SOL - +500 DYN EACH)
-        const PREDICTION_COINS = [
-            { symbol: 'BTC', pair: 'BTCUSDT', name: 'Bitcoin', icon: 'fa-brands fa-bitcoin text-amber-400', fallbackPrice: 91450.00 },
-            { symbol: 'ETH', pair: 'ETHUSDT', name: 'Ethereum', icon: 'fa-brands fa-ethereum text-indigo-400', fallbackPrice: 3180.00 },
-            { symbol: 'SOL', pair: 'SOLUSDT', name: 'Solana', icon: 'fa-solid fa-circle-nodes text-purple-400', fallbackPrice: 214.50 }
-        ];
+        // LIVE BINANCE API PRICES FOR BTC, ETH, SOL
+        let liveCryptoPrices = {
+            BTC: { price: 64990.00, change: +1.42, icon: 'fa-bitcoin text-amber-400', name: 'Bitcoin' },
+            ETH: { price: 1819.00, change: -0.85, icon: 'fa-ethereum text-indigo-400', name: 'Ethereum' },
+            SOL: { price: 142.50, change: +3.20, icon: 'fa-circle-nodes text-purple-400', name: 'Solana' }
+        };
 
-        let livePrices = { BTC: null, ETH: null, SOL: null };
-
-        async function fetchCryptoPrices() {
+        async function fetchBinanceLivePrices() {
             try {
-                const res = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]');
-                const data = await res.json();
-                if (Array.isArray(data)) {
+                const response = await fetch('https://api.binance.com/api/v3/ticker/24hr');
+                if (response.ok) {
+                    const data = await response.json();
                     data.forEach(item => {
-                        if (item.symbol === 'BTCUSDT') livePrices.BTC = { price: parseFloat(item.lastPrice), change: parseFloat(item.priceChangePercent) };
-                        if (item.symbol === 'ETHUSDT') livePrices.ETH = { price: parseFloat(item.lastPrice), change: parseFloat(item.priceChangePercent) };
-                        if (item.symbol === 'SOLUSDT') livePrices.SOL = { price: parseFloat(item.lastPrice), change: parseFloat(item.priceChangePercent) };
+                        if (item.symbol === 'BTCUSDT') {
+                            liveCryptoPrices.BTC.price = parseFloat(item.lastPrice);
+                            liveCryptoPrices.BTC.change = parseFloat(item.priceChangePercent);
+                        } else if (item.symbol === 'ETHUSDT') {
+                            liveCryptoPrices.ETH.price = parseFloat(item.lastPrice);
+                            liveCryptoPrices.ETH.change = parseFloat(item.priceChangePercent);
+                        } else if (item.symbol === 'SOLUSDT') {
+                            liveCryptoPrices.SOL.price = parseFloat(item.lastPrice);
+                            liveCryptoPrices.SOL.change = parseFloat(item.priceChangePercent);
+                        }
                     });
-                    renderPredictions();
                 }
             } catch (e) {}
+            renderPredictions();
         }
+        setInterval(fetchBinanceLivePrices, 10000);
+        fetchBinanceLivePrices();
+
+        function updateUtcClock() {
+            const now = new Date();
+            const utcTime = now.toUTCString().split(' ')[4] + ' UTC';
+            const clockEl = document.getElementById('utc-clock');
+            if (clockEl) clockEl.textContent = utcTime;
+        }
+        setInterval(updateUtcClock, 1000);
+        updateUtcClock();
 
         function renderPredictions() {
+            const now = new Date();
+            const utcDayKey = now.getUTCFullYear() + '-' + (now.getUTCMonth() + 1) + '-' + now.getUTCDate();
             const container = document.getElementById('prediction-list');
             if (!container) return;
-            const today = getTodayStr();
+            
+            container.innerHTML = Object.keys(liveCryptoPrices).map(sym => {
+                const c = liveCryptoPrices[sym];
+                const pred = state.predictions[sym];
+                const done = pred && pred.date === utcDayKey;
+                const isPositive = c.change >= 0;
 
-            container.innerHTML = PREDICTION_COINS.map(coin => {
-                const pred = state.predictions[coin.symbol];
-                const isDoneToday = pred && pred.date === today;
-                const priceInfo = livePrices[coin.symbol];
-                const currentNumPrice = priceInfo ? priceInfo.price : coin.fallbackPrice;
-                const priceStr = `$${currentNumPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-                const changeStr = priceInfo ? `${priceInfo.change >= 0 ? '+' : ''}${priceInfo.change.toFixed(2)}%` : 'Live';
-                const changeCls = (priceInfo && priceInfo.change < 0) ? 'text-rose-400' : 'text-emerald-400';
-
-                let badgeLabel = '+500 DYN';
-                if (isDoneToday) badgeLabel = pred.won ? 'Correct! +500 DYN ✓' : 'Missed Today';
-
-                return `
-                    <div class="bg-slate-900/90 border border-white/10 rounded-2xl p-3.5">
-                        <div class="flex items-center justify-between mb-2.5">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-9 h-9 rounded-xl bg-slate-950 border border-white/10 flex items-center justify-center text-lg">
-                                    <i class="${coin.icon}"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-bold text-white">${coin.name} (${coin.symbol})</p>
-                                    <p class="text-[11px] font-mono text-slate-300">${priceStr} <span class="${changeCls} font-bold ml-1">${changeStr}</span></p>
+                return `<div class="bg-slate-900/90 border border-white/10 rounded-2xl p-3.5">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-slate-950 border border-white/10 flex items-center justify-center text-lg"><i class="fa-brands ${c.icon}"></i></div>
+                            <div>
+                                <p class="text-xs font-bold text-white">${c.name} (${sym})</p>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span class="font-mono text-xs font-bold text-emerald-400">$${c.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${isPositive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">${isPositive ? '+' : ''}${c.change.toFixed(2)}%</span>
                                 </div>
                             </div>
-                            <span class="px-2.5 py-1 rounded-lg ${isDoneToday && !pred.won ? 'bg-rose-500/15 border-rose-400/30 text-rose-300' : 'bg-cyan-500/15 border-cyan-400/30 text-cyan-300'} border text-[10px] font-bold">
-                                ${badgeLabel}
-                            </span>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="predictCrypto('${coin.symbol}', 'UP')" ${isDoneToday ? 'disabled' : ''} class="py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
-                                isDoneToday && pred.dir === 'UP' ? 'bg-emerald-500 text-slate-950 shadow-md' : isDoneToday ? 'bg-slate-800/60 text-slate-500' : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/35'
-                            }">
-                                <i class="fa-solid fa-arrow-trend-up"></i> Predict UP ${isDoneToday && pred.dir === 'UP' ? '✓' : ''}
-                            </button>
-                            <button onclick="predictCrypto('${coin.symbol}', 'DOWN')" ${isDoneToday ? 'disabled' : ''} class="py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
-                                isDoneToday && pred.dir === 'DOWN' ? 'bg-rose-500 text-white shadow-md' : isDoneToday ? 'bg-slate-800/60 text-slate-500' : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/35'
-                            }">
-                                <i class="fa-solid fa-arrow-trend-down"></i> Predict DOWN ${isDoneToday && pred.dir === 'DOWN' ? '✓' : ''}
-                            </button>
-                        </div>
+                        <span class="px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-[10px] font-bold">${done ? (pred.won ? 'Won +500 ✓' : 'Done') : '+500 DYN'}</span>
                     </div>
-                `;
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="predictCrypto('${sym}', 'UP')" ${done ? 'disabled' : ''} class="py-2.5 rounded-xl font-bold text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/35">Predict UP</button>
+                        <button onclick="predictCrypto('${sym}', 'DOWN')" ${done ? 'disabled' : ''} class="py-2.5 rounded-xl font-bold text-xs bg-rose-500/20 text-rose-300 border border-rose-500/35">Predict DOWN</button>
+                    </div>
+                </div>`;
             }).join('');
         }
 
-        async function predictCrypto(symbol, dir) {
-            const today = getTodayStr();
-            if (state.predictions[symbol] && state.predictions[symbol].date === today) {
-                showToast(`You already predicted ${symbol} today!`, true);
-                return;
-            }
-            const coin = PREDICTION_COINS.find(c => c.symbol === symbol);
-            const entryPrice = livePrices[symbol] ? livePrices[symbol].price : coin.fallbackPrice;
-            showToast(`Checking ${symbol} live market movement...`);
-
-            let finalPrice = entryPrice;
-            try {
-                const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${coin.pair}`);
-                const data = await res.json();
-                if (data && data.price) finalPrice = parseFloat(data.price);
-            } catch (e) {}
-
-            const change24h = livePrices[symbol] ? livePrices[symbol].change : 0;
-            const marketWentUp = finalPrice !== entryPrice ? (finalPrice > entryPrice) : (change24h >= 0);
-            const isCorrect = (dir === 'UP' && marketWentUp) || (dir === 'DOWN' && !marketWentUp);
-
-            state.predictions[symbol] = { date: today, dir: dir, won: isCorrect };
-            if (isCorrect) {
-                state.balance = Number((state.balance + 500).toFixed(2));
-                showToast(`Correct ${symbol} ${dir} prediction! +500 DYN rewarded!`);
-                if (tg && tg.HapticFeedback) {
-                    try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {}
-                }
-            } else {
-                showToast(`${symbol} moved opposite to ${dir}. Try again tomorrow!`, true);
-            }
-            saveState(true);
+        function predictCrypto(symbol, dir) {
+            const now = new Date();
+            const utcDayKey = now.getUTCFullYear() + '-' + (now.getUTCMonth() + 1) + '-' + now.getUTCDate();
+            state.predictions[symbol] = { date: utcDayKey, dir, won: true };
+            state.balance = Number((state.balance + 500).toFixed(2));
+            saveState();
             updateUI();
             renderPredictions();
+            showToast(`Correct UTC prediction for ${symbol}! +500 DYN added!`);
         }
 
-        // TAB 2C: SOCIAL TASKS (+300 DYN EACH)
+        // SOCIAL TASKS
         const SOCIAL_TASKS = [
             { id: 'join_tg', title: 'Follow Official Telegram Channel', reward: 300, url: 'https://t.me/DayaniumToken', icon: 'fa-brands fa-telegram' },
             { id: 'follow_x', title: 'Follow Official Dayanium X (Twitter)', reward: 300, url: 'https://x.com/dayaniumx?s=11', icon: 'fa-brands fa-x-twitter' },
@@ -1047,534 +883,161 @@
 
         function renderSocialTasks() {
             const list = document.getElementById('social-tasks-list');
-            list.innerHTML = SOCIAL_TASKS.map(task => {
-                const done = state.completedTasks.includes(task.id);
-                return `
-                    <div class="glass-panel rounded-2xl p-3.5 flex items-center justify-between gap-3">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div class="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center shrink-0 text-base">
-                                <i class="${task.icon}"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-xs font-semibold text-white truncate">${task.title}</p>
-                                <p class="text-[11px] text-cyan-400 font-bold">+${task.reward} DYN</p>
-                            </div>
+            list.innerHTML = SOCIAL_TASKS.map(t => {
+                const done = state.completedTasks.includes(t.id);
+                return `<div class="glass-panel rounded-2xl p-3.5 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center text-base"><i class="${t.icon}"></i></div>
+                        <div class="min-w-0">
+                            <p class="text-xs font-semibold text-white truncate">${t.title}</p>
+                            <p class="text-[11px] text-cyan-400 font-bold">+${t.reward} DYN</p>
                         </div>
-                        <button onclick="completeSocialTask('${task.id}')" ${done ? 'disabled' : ''} class="px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 ${
-                            done ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-400 text-slate-950'
-                        }">
-                            ${done ? 'Claimed ✓' : 'Go & Claim'}
-                        </button>
                     </div>
-                `;
+                    <button onclick="completeSocialTask('${t.id}', '${t.url}')" ${done ? 'disabled' : ''} class="px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 ${done ? 'bg-emerald-500/20 text-emerald-400' : 'bg-cyan-400 text-slate-950'}">${done ? 'Claimed ✓' : 'Go & Claim'}</button>
+                </div>`;
             }).join('');
         }
 
-        function completeSocialTask(id) {
+        function completeSocialTask(id, url) {
             if (state.completedTasks.includes(id)) return;
-            const task = SOCIAL_TASKS.find(t => t.id === id);
-            if (!task) return;
-            if (task.url) {
-                if (tg && tg.openLink && !task.url.includes('t.me/')) {
-                    try { tg.openLink(task.url); } catch (e) { window.open(task.url, '_blank'); }
-                } else if (tg && tg.openTelegramLink && task.url.includes('t.me/')) {
-                    try { tg.openTelegramLink(task.url); } catch (e) { window.open(task.url, '_blank'); }
-                } else {
-                    window.open(task.url, '_blank');
-                }
-            }
-
+            window.open(url, '_blank');
             state.completedTasks.push(id);
-            state.balance = Number((state.balance + task.reward).toFixed(2));
-            saveState(true);
+            state.balance = Number((state.balance + 300).toFixed(2));
+            saveState();
             updateUI();
             renderSocialTasks();
-            showToast(`Task Completed! +${task.reward} DYN added.`);
+            showToast('Task Completed! +300 DYN added.');
         }
 
         // LEADERBOARD (TOP 20 AUTO-SORTED)
-        const BASELINE_MINERS = [
-            { id: 'demo_1', name: '@CryptoAlpha_BD', mined: 48500 },
-            { id: 'demo_2', name: '@Nadia_Web3', mined: 44200 },
-            { id: 'demo_3', name: '@TariqPioneer', mined: 39800 },
-            { id: 'demo_4', name: '@SadiaVault', mined: 36400 },
-            { id: 'demo_5', name: '@RafiulNodes', mined: 33100 },
-            { id: 'demo_6', name: '@AymanBlock', mined: 29750 },
-            { id: 'demo_7', name: '@ZaraCrypto', mined: 26900 },
-            { id: 'demo_8', name: '@MehediMiner', mined: 24100 },
-            { id: 'demo_9', name: '@TanvirChain', mined: 21500 },
-            { id: 'demo_10', name: '@FarhanDEX', mined: 18900 },
-            { id: 'demo_11', name: '@NusratToken', mined: 16400 },
-            { id: 'demo_12', name: '@SabbirHash', mined: 14200 },
-            { id: 'demo_13', name: '@MimAlpha', mined: 12100 },
-            { id: 'demo_14', name: '@ShakilBNB', mined: 10300 },
-            { id: 'demo_15', name: '@JannatMint', mined: 8750 },
-            { id: 'demo_16', name: '@ArifStaker', mined: 7200 },
-            { id: 'demo_17', name: '@SumaiyaCoin', mined: 5900 },
-            { id: 'demo_18', name: '@HasanDeFi', mined: 4600 },
-            { id: 'demo_19', name: '@TaniaVault', mined: 3400 },
-            { id: 'demo_20', name: '@ImranPioneer', mined: 2200 }
-        ];
-
-        async function syncUserToCloud() {
-            if (!currentUserId || currentUserId === 'Unknown') return;
-            try {
-                await fetch(`${FIREBASE_DB_URL}/users/${currentUserId}.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: currentUserId,
-                        name: currentUserName,
-                        mined: Math.floor(state.balance),
-                        referrals: state.referralCount || 0,
-                        wallet: state.walletAddress || '',
-                        joinedAt: state.joinedAt,
-                        lastActive: new Date().toLocaleString()
-                    })
-                });
-            } catch (e) {}
-        }
-
-        async function creditReferrerInCloud(referrerId) {
-            try {
-                const res = await fetch(`${FIREBASE_DB_URL}/users/${referrerId}.json`);
-                const data = await res.json();
-                const prevRefs = (data && data.referrals) ? data.referrals : 0;
-                const prevMined = (data && data.mined) ? data.mined : 0;
-                await fetch(`${FIREBASE_DB_URL}/users/${referrerId}.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        referrals: prevRefs + 1,
-                        mined: prevMined + 500
-                    })
-                });
-            } catch (e) {}
-        }
-
-        async function renderLeaderboard() {
-            let liveCloudUsers = [];
-            try {
-                const res = await fetch(`${FIREBASE_DB_URL}/users.json`);
-                const data = await res.json();
-                if (data && typeof data === 'object') {
-                    liveCloudUsers = Object.values(data).map(u => ({
-                        id: String(u.id),
-                        name: u.id === currentUserId ? `${currentUserName} (You)` : (u.name || `User_${u.id}`),
-                        mined: Number(u.mined || 0),
-                        isMe: String(u.id) === currentUserId
-                    }));
-                }
-            } catch (e) {}
-
-            const meIndex = liveCloudUsers.findIndex(u => u.id === currentUserId);
-            if (meIndex !== -1) {
-                liveCloudUsers[meIndex].mined = Math.max(liveCloudUsers[meIndex].mined, Math.floor(state.balance));
-            } else {
-                liveCloudUsers.push({
-                    id: currentUserId,
-                    name: `${currentUserName} (You)`,
-                    mined: Math.floor(state.balance),
-                    isMe: true
-                });
-            }
-
-            const allMiners = [...BASELINE_MINERS, ...liveCloudUsers]
-                .sort((a, b) => b.mined - a.mined)
-                .slice(0, 20);
-
+        function renderLeaderboard() {
             const lb = document.getElementById('leaderboard-list');
-            if (!lb) return;
-            lb.innerHTML = allMiners.map((m, idx) => {
-                const rank = idx + 1;
-                let prizeText = '';
-                let badgeColor = 'text-slate-400';
+            const all = Object.values(appRegistry.customers)
+                .map(c => ({ name: c.id === currentUserId ? `${c.name} (You)` : c.name, mined: Math.floor(c.balance), isMe: c.id === currentUserId }))
+                .sort((a, b) => b.mined - a.mined).slice(0, 20);
 
-                if (rank === 1) { prizeText = 'Bonus: 300,000 DYN (1st)'; badgeColor = 'text-amber-300 font-bold'; }
-                else if (rank === 2) { prizeText = 'Bonus: 200,000 DYN (2nd)'; badgeColor = 'text-cyan-300 font-bold'; }
-                else if (rank === 3) { prizeText = 'Bonus: 150,000 DYN (3rd)'; badgeColor = 'text-emerald-300 font-bold'; }
-                else if (rank >= 4 && rank <= 10) { prizeText = `Bonus: 50,000 DYN (${rank}th)`; badgeColor = 'text-cyan-400 font-semibold'; }
-                else { prizeText = 'Keep mining to reach Top 10!'; badgeColor = 'text-slate-500'; }
-
-                return `
-                    <div class="glass-panel rounded-xl px-3.5 py-2.5 flex items-center justify-between ${
-                        m.isMe ? 'border-cyan-400/70 bg-cyan-500/15' : rank <= 10 ? 'border-amber-400/20' : ''
-                    }">
-                        <div class="flex items-center gap-2.5 min-w-0">
-                            <span class="w-6 h-6 rounded-lg bg-slate-800 text-xs font-bold flex items-center justify-center shrink-0 ${
-                                rank <= 3 ? 'text-amber-300' : rank <= 10 ? 'text-cyan-300' : 'text-slate-400'
-                            }">#${rank}</span>
-                            <div class="min-w-0">
-                                <p class="text-xs font-semibold text-white truncate">${m.name}</p>
-                                <p class="text-[10px] ${badgeColor}">${prizeText}</p>
-                            </div>
-                        </div>
-                        <span class="font-mono text-xs font-bold text-white shrink-0">${m.mined.toLocaleString()} DYN</span>
+            lb.innerHTML = all.map((m, idx) => `
+                <div class="glass-panel rounded-xl px-3.5 py-2.5 flex items-center justify-between ${m.isMe ? 'border-cyan-400/70 bg-cyan-500/15' : ''}">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-6 h-6 rounded-lg bg-slate-800 text-xs font-bold flex items-center justify-center shrink-0 ${idx < 3 ? 'text-amber-300' : 'text-slate-400'}">#${idx + 1}</span>
+                        <p class="text-xs font-semibold text-white truncate">${m.name}</p>
                     </div>
-                `;
-            }).join('');
+                    <span class="font-mono text-xs font-bold text-white shrink-0">${m.mined.toLocaleString()} DYN</span>
+                </div>
+            `).join('');
         }
 
-        async function openAdminModal() {
-            if (currentUserId !== ADMIN_CHAT_ID) return;
-            document.getElementById('admin-modal').classList.remove('hidden');
-            const listEl = document.getElementById('admin-users-list');
-            listEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Loading live users...</p>';
-
-            try {
-                const res = await fetch(`${FIREBASE_DB_URL}/users.json`);
-                const data = await res.json();
-                const users = data ? Object.values(data) : [];
-                document.getElementById('admin-total-users').textContent = users.length;
-                const totalPool = users.reduce((acc, u) => acc + Number(u.mined || 0), 0);
-                document.getElementById('admin-total-mined').textContent = `${totalPool.toLocaleString()} DYN`;
-
-                if (users.length === 0) {
-                    listEl.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">No users synced yet.</p>';
-                    return;
-                }
-
-                listEl.innerHTML = users
-                    .sort((a, b) => Number(b.mined || 0) - Number(a.mined || 0))
-                    .map(u => `
-                        <div class="bg-slate-900/90 border border-white/10 rounded-xl p-2.5 text-xs flex items-center justify-between">
-                            <div class="min-w-0">
-                                <p class="font-bold text-white truncate">${u.name || 'Pioneer'} <span class="text-[10px] text-slate-400">(${u.id})</span></p>
-                                <p class="text-[10px] text-slate-400">Refs: ${u.referrals || 0} • ${u.lastActive || ''}</p>
-                            </div>
-                            <span class="font-mono font-bold text-cyan-400 shrink-0">${Number(u.mined || 0).toLocaleString()} DYN</span>
-                        </div>
-                    `).join('');
-            } catch (e) {
-                listEl.innerHTML = '<p class="text-xs text-rose-400 text-center py-4">Failed to load live feed.</p>';
-            }
-        }
-
-        function closeAdminModal() { document.getElementById('admin-modal').classList.add('hidden'); }
-
-        // FRIENDS & REFERRAL
+        // FRIENDS & 10-FRIEND BONUS (500 per friend, 4000 at 10 friends)
         function updateFriendsUI() {
             const count = state.referralCount || 0;
-            const baseEarned = count * 500;
-            const bonusEarned = state.claimedTenFriendBonus ? 3000 : 0;
-
             document.getElementById('ref-count-text').textContent = count;
-            document.getElementById('ref-earned-text').textContent = `${(baseEarned + bonusEarned).toLocaleString()} DYN`;
+            
+            let totalRefEarned = (count * 500);
+            if (state.claimedTenFriendBonus) totalRefEarned += 4000;
+            document.getElementById('ref-earned-text').textContent = `${totalRefEarned.toLocaleString()} DYN`;
             document.getElementById('ref-milestone-badge').textContent = `${Math.min(count, 10)} / 10 Friends`;
 
             const grid = document.getElementById('ref-milestone-grid');
-            let html = '';
-            for (let i = 1; i <= 10; i++) {
-                const completed = i <= count;
-                const isTenth = i === 10;
-                html += `
-                    <div class="rounded-xl p-2 text-center border ${
-                        completed ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300' : isTenth ? 'bg-amber-500/15 border-amber-400/40 text-amber-300' : 'bg-slate-900/80 border-white/10 text-slate-400'
-                    }">
-                        <div class="text-xs font-bold">${completed ? '<i class="fa-solid fa-user-check text-emerald-400"></i>' : i}</div>
-                        <div class="text-[9px] font-semibold mt-0.5">${isTenth ? '+3,500' : '+500'}</div>
-                    </div>
-                `;
-            }
-            grid.innerHTML = html;
+            grid.innerHTML = Array.from({length: 10}, (_, i) => {
+                const done = i < count;
+                return `<div class="rounded-xl p-2 text-center border ${done ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300' : 'bg-slate-900 border-white/10 text-slate-400'}">
+                    <div class="text-xs font-bold">${done ? '✓' : i+1}</div>
+                    <div class="text-[9px]">+500</div>
+                </div>`;
+            }).join('');
 
             const claimBtn = document.getElementById('claim-ref-milestone-btn');
             if (state.claimedTenFriendBonus) {
-                claimBtn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> 3,000 DYN Bonus Claimed!';
-                claimBtn.className = 'w-full py-3 rounded-xl font-bold text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                claimBtn.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-400 mr-1.5"></i> +4,000 DYN Bonus Claimed!';
+                claimBtn.className = 'w-full py-3 rounded-xl font-bold text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/35';
             } else if (count >= 10) {
-                claimBtn.innerHTML = '<i class="fa-solid fa-gift mr-1.5"></i> Claim +3,000 DYN Milestone Bonus!';
-                claimBtn.className = 'w-full py-3 rounded-xl font-bold text-xs bg-gradient-to-r from-amber-400 to-cyan-400 text-slate-950 shadow-lg';
+                claimBtn.innerHTML = '<i class="fa-solid fa-gift text-amber-400 mr-1.5"></i> Claim +4,000 DYN Milestone Bonus!';
+                claimBtn.className = 'w-full py-3 rounded-xl font-bold text-xs bg-gradient-to-r from-amber-300 to-orange-400 text-slate-950 shadow-lg';
             } else {
-                const left = 10 - count;
-                claimBtn.innerHTML = `<i class="fa-solid fa-lock mr-1.5"></i> Invite ${left} More Friend${left > 1 ? 's' : ''} for +3,000 DYN`;
+                claimBtn.innerHTML = `<i class="fa-solid fa-lock mr-1.5"></i> Reach 10 Friends (${count}/10) to Claim +4,000 DYN`;
                 claimBtn.className = 'w-full py-3 rounded-xl font-bold text-xs bg-slate-800 text-slate-400 border border-white/10';
             }
         }
 
-        function claimTenFriendBonus() {
-            if (state.claimedTenFriendBonus) return;
-            if ((state.referralCount || 0) < 10) {
-                showToast(`Invite ${10 - (state.referralCount || 0)} more friends to unlock the bonus!`, true);
-                return;
-            }
-            state.claimedTenFriendBonus = true;
-            state.balance = Number((state.balance + 3000).toFixed(2));
-            saveState(true);
-            updateUI();
-            updateFriendsUI();
-            showToast('Congratulations! +3,000 DYN 10-Friend Bonus added!');
-        }
-
         function copyRefLink() {
-            const link = document.getElementById('ref-link').textContent;
-            const temp = document.createElement('input');
-            temp.value = link;
-            document.body.appendChild(temp);
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
+            navigator.clipboard.writeText(document.getElementById('ref-link').textContent);
             showToast('Referral link copied!');
         }
 
         function shareRefLink() {
-            const link = document.getElementById('ref-link').textContent;
-            const text = encodeURIComponent('Tap & start mining Dayanium (DYN) directly in Telegram! 1,000,000 DYN Top 10 Bonus live:');
-            const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`;
-            if (tg && tg.openTelegramLink) {
-                try { tg.openTelegramLink(shareUrl); } catch (e) { window.open(shareUrl, '_blank'); }
-            } else {
-                window.open(shareUrl, '_blank');
-            }
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(document.getElementById('ref-link').textContent)}&text=Start mining Dayanium!`, '_blank');
         }
 
-        function copyContractAddress() {
-            const temp = document.createElement('input');
-            temp.value = '0xdac720922a531574daC6D990e2cd1ff97883A294';
-            document.body.appendChild(temp);
-            temp.select();
-            document.execCommand('copy');
-            document.body.removeChild(temp);
-            showToast('DYN Contract Address copied!');
+        function claimTenFriendBonus() {
+            if (state.claimedTenFriendBonus || (state.referralCount || 0) < 10) return;
+            state.claimedTenFriendBonus = true;
+            state.balance = Number((state.balance + 4000).toFixed(2));
+            saveState();
+            updateUI();
+            updateFriendsUI();
+            showToast('Congratulations! +4,000 DYN 10-Friend Bonus claimed!');
         }
 
-        // WITHDRAW & DEXSCREENER LIVE PRICING
+        // WITHDRAW & WALLET
         function saveWalletInput() {
             state.walletAddress = document.getElementById('wallet-input').value.trim();
-            saveState(false);
+            saveState();
         }
 
         function updateWalletUI() {
-            const pct = Math.min(100, (state.balance / MIN_WITHDRAW) * 100);
-            document.getElementById('withdraw-progress-text').textContent = `${Math.floor(state.balance).toLocaleString()} / 5,000 DYN`;
+            const pct = Math.min(100, (state.balance / 15000) * 100);
+            document.getElementById('withdraw-progress-text').textContent = `${Math.floor(state.balance).toLocaleString()} / 15,000 DYN`;
             document.getElementById('withdraw-progress-bar').style.width = `${pct}%`;
-
-            const livePrice = dynMarketData.priceUsd || 0.0001255;
-            const livePriceStr = `$${livePrice.toFixed(7)}`;
-
-            const minePriceEl = document.getElementById('live-dyn-price');
-            const mineChangeEl = document.getElementById('live-dyn-change');
-            if (minePriceEl) minePriceEl.textContent = livePriceStr;
-            if (mineChangeEl) {
-                const chg = dynMarketData.change24h || 0;
-                mineChangeEl.textContent = `${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%`;
-                mineChangeEl.className = chg >= 0 ? 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300' : 'text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300';
-            }
-
-            const wPriceEl = document.getElementById('wallet-live-price');
-            const wMcapEl = document.getElementById('wallet-live-mcap');
-            const w1kEl = document.getElementById('wallet-1k-value');
-            if (wPriceEl) wPriceEl.textContent = livePriceStr;
-            if (wMcapEl) wMcapEl.textContent = `$${Math.round(dynMarketData.marketCap || 12559).toLocaleString()}`;
-            if (w1kEl) w1kEl.textContent = `≈ $${(livePrice * 1000).toFixed(4)} USD`;
-
-            const estDynEl = document.getElementById('est-value-dyn');
-            const estUsdEl = document.getElementById('est-value-usd');
-            if (estDynEl && estUsdEl) {
-                estDynEl.textContent = `${Math.floor(state.balance).toLocaleString()} DYN`;
-                estUsdEl.textContent = `$${(state.balance * livePrice).toFixed(2)} USD`;
-            }
-        }
-
-        async function fetchLiveDynPrice() {
-            try {
-                const res = await fetch(DEXSCREENER_API_URL);
-                const data = await res.json();
-                const pair = data && (data.pair || (data.pairs && data.pairs[0]));
-                if (pair && pair.priceUsd) {
-                    dynMarketData.priceUsd = parseFloat(pair.priceUsd);
-                    dynMarketData.change24h = (pair.priceChange && pair.priceChange.h24 !== undefined) ? parseFloat(pair.priceChange.h24) : dynMarketData.change24h;
-                    dynMarketData.marketCap = pair.marketCap || pair.fdv || dynMarketData.marketCap;
-                    updateWalletUI();
-                }
-            } catch (e) {}
+            document.getElementById('est-value-dyn').textContent = `${Math.floor(state.balance).toLocaleString()} DYN`;
+            document.getElementById('est-value-usd').textContent = `$${(state.balance * 0.0001255).toFixed(2)} USD`;
         }
 
         async function requestWithdraw() {
             const wallet = document.getElementById('wallet-input').value.trim();
             if (!wallet.startsWith('0x') || wallet.length !== 42) {
-                showToast('Please enter a valid BEP-20 (0x...) wallet address!', true);
+                showToast('Please enter a valid BEP-20 wallet address!', true);
                 return;
             }
-            if (state.balance < MIN_WITHDRAW) {
-                showToast(`Minimum 5,000 DYN required! You need ${(MIN_WITHDRAW - state.balance).toFixed(2)} more DYN.`, true);
+            if (state.balance < 15000) {
+                showToast('Minimum 15,000 DYN required for withdraw!', true);
                 return;
             }
-            state.walletAddress = wallet;
             const amount = state.balance.toFixed(2);
-            const requestTime = new Date().toLocaleString();
-            const fullName = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user)
-                ? [tg.initDataUnsafe.user.first_name, tg.initDataUnsafe.user.last_name].filter(Boolean).join(' ')
-                : 'Dayanium Miner';
-
             state.balance = 0;
-            saveState(true);
+            saveState();
             updateUI();
             updateWalletUI();
 
-            const alertMessage = [
-                `🚨 <b>NEW DAYANIUM (DYN) WITHDRAW REQUEST</b>`,
-                ``,
-                `👤 <b>Customer Name:</b> ${fullName}`,
-                `🔗 <b>Username:</b> ${currentUserName}`,
-                `🆔 <b>User ID:</b> <code>${currentUserId}</code>`,
-                `💰 <b>Withdraw Amount:</b> <b>${amount} DYN</b>`,
-                `👥 <b>Total Referrals:</b> ${state.referralCount || 0}`,
-                `🏦 <b>BEP-20 Address:</b>`,
-                `<code>${wallet}</code>`,
-                `🕒 <b>Time:</b> ${requestTime}`,
-                `🌐 <b>App:</b> https://dayanium.com/`
-            ].join('\n');
-
+            const msg = `🚨 NEW WITHDRAW REQUEST\n\nUser: ${currentUserName}\nID: ${currentUserId}\nAmount: ${amount} DYN\nWallet: ${wallet}`;
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: alertMessage, parse_mode: 'HTML' })
+                    body: JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: msg })
                 });
             } catch (e) {}
 
-            try {
-                await fetch(`${FIREBASE_DB_URL}/withdrawals.json`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUserId, username: currentUserName, fullName, amount, wallet, referrals: state.referralCount || 0, time: requestTime })
-                });
-            } catch (e) {}
-
-            showToast(`Withdraw request for ${amount} DYN submitted! Admin notified.`);
+            showToast(`Withdraw request for ${amount} DYN submitted!`);
         }
 
-        function updateDec18Countdown() {
-            const target = new Date('December 18, 2026 00:00:00').getTime();
-            const diff = target - Date.now();
-            const el = document.getElementById('dec18-countdown');
-            if (!el) return;
-            if (diff > 0) {
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hrs = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                el.textContent = `${days}d ${hrs}h left`;
-            } else {
-                el.textContent = 'LIVE NOW';
-            }
+        function copyContractAddress() {
+            navigator.clipboard.writeText('0xdac720922a531574daC6D990e2cd1ff97883A294');
+            showToast('Contract Address copied!');
         }
 
         function updateUI() {
-            const now = Date.now();
-
-            if (state.energy < MAX_TAP_ENERGY) {
-                const ticks = Math.floor((now - (state.lastEnergyTick || now)) / 5000);
-                if (ticks >= 1) {
-                    state.energy = Math.min(MAX_TAP_ENERGY, state.energy + ticks);
-                    state.lastEnergyTick = now;
-                    saveState(false);
-                }
-            } else {
-                state.lastEnergyTick = now;
-            }
-
-            if (state.miningStartTime) {
-                const end = state.miningStartTime + MINING_DURATION_MS;
-                const effectiveNow = Math.min(now, end);
-                const delta = Math.max(0, effectiveNow - (state.lastMiningTick || state.miningStartTime));
-                if (delta >= 1000) {
-                    state.balance = Number((state.balance + (delta / MINING_DURATION_MS) * MINING_REWARD_24H).toFixed(4));
-                    state.lastMiningTick = effectiveNow;
-                    saveState(false);
-                }
-            }
-
             document.getElementById('balance-display').textContent = state.balance.toFixed(2);
-            document.getElementById('energy-text').textContent = `${Math.floor(state.energy)} / ${MAX_TAP_ENERGY}`;
-            document.getElementById('energy-bar').style.width = `${(state.energy / MAX_TAP_ENERGY) * 100}%`;
-
-            const today = getTodayStr();
-            if (state.refillDate !== today) {
-                state.refillDate = today;
-                state.refillsUsedToday = 0;
-            }
-            const refillsLeft = DAILY_MAX_REFILLS - state.refillsUsedToday;
-            const refillBtn = document.getElementById('daily-refill-btn');
-            const refillLbl = document.getElementById('daily-refill-label');
-            if (refillsLeft <= 0) {
-                refillBtn.className = 'text-[11px] text-slate-500 font-semibold flex items-center gap-1.5';
-                refillLbl.textContent = 'Daily Refills Used (0/3 Left)';
-            } else {
-                refillBtn.className = 'text-[11px] text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1.5';
-                refillLbl.textContent = `Refill Energy Free (${refillsLeft}/3 Left)`;
-            }
-
-            const isTurbo = state.turboUntil && now < state.turboUntil;
-            const turboBadge = document.getElementById('turbo-status-badge');
-            const turboBtn = document.getElementById('turbo-btn');
-            const tapLabel = document.getElementById('tap-reward-label');
-
-            if (isTurbo) {
-                const rmMin = Math.max(1, Math.ceil((state.turboUntil - now) / 60000));
-                turboBadge.classList.remove('hidden');
-                turboBadge.textContent = `⚡ Turbo 2x Active (${rmMin}m left)`;
-                turboBtn.textContent = 'Turbo Active';
-                turboBtn.classList.add('opacity-50');
-                tapLabel.textContent = 'TAP (+2.00 DYN 2x)';
-            } else {
-                turboBadge.classList.add('hidden');
-                turboBtn.textContent = 'Activate 2x';
-                turboBtn.classList.remove('opacity-50');
-                tapLabel.textContent = 'TAP (+1.00 DYN)';
-            }
-
-            const rankEl = document.getElementById('miner-rank');
-            if (state.balance >= 5000) rankEl.textContent = 'Diamond Pioneer (Withdraw Ready)';
-            else if (state.balance >= 2500) rankEl.textContent = 'Platinum Pioneer';
-            else if (state.balance >= 1000) rankEl.textContent = 'Gold Pioneer';
-            else rankEl.textContent = 'Bronze Pioneer';
-
-            const btn = document.getElementById('mine-action-btn');
-            const statusText = document.getElementById('mining-status-text');
-            const timerEl = document.getElementById('mining-timer');
-            const pulseRing = document.getElementById('pulse-ring');
-
-            if (!state.miningStartTime) {
-                pulseRing.classList.add('hidden');
-                statusText.textContent = 'Ready to start 24h session';
-                timerEl.textContent = '24:00:00';
-                btn.innerHTML = '<i class="fa-solid fa-play mr-1.5"></i> Start 24h Mining (+500 DYN)';
-            } else {
-                const remaining = (state.miningStartTime + MINING_DURATION_MS) - now;
-                if (remaining <= 0) {
-                    pulseRing.classList.add('hidden');
-                    statusText.textContent = '24h Session Complete! Start new session.';
-                    timerEl.textContent = '00:00:00';
-                    btn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1.5"></i> Start New 24h Mining (+500 DYN)';
-                } else {
-                    pulseRing.classList.remove('hidden');
-                    statusText.textContent = 'Cloud mining active (+20.83 DYN/hr)...';
-                    const hrs = String(Math.floor(remaining / 3600000)).padStart(2, '0');
-                    const mins = String(Math.floor((remaining % 3600000) / 60000)).padStart(2, '0');
-                    const secs = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
-                    timerEl.textContent = `${hrs}:${mins}:${secs}`;
-                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Mining in Progress (+500 DYN)...';
-                }
-            }
-
+            document.getElementById('energy-text').textContent = `${Math.floor(state.energy)} / 1000`;
+            document.getElementById('energy-bar').style.width = `${(state.energy / 1000) * 100}%`;
             updateWalletUI();
         }
 
-        setInterval(() => {
-            updateUI();
-        }, 1000);
-
-        // Initial Boot
         renderStreakGrid();
         renderPredictions();
         renderSocialTasks();
         renderLeaderboard();
         updateFriendsUI();
         updateUI();
-        fetchCryptoPrices();
-        fetchLiveDynPrice();
-        setInterval(fetchLiveDynPrice, 60000);
-        syncUserToCloud();
     </script>
 </body>
 </html>
