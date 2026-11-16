@@ -89,7 +89,7 @@
         <p id="toast-msg" class="text-xs font-medium text-slate-100 leading-snug"></p>
     </div>
 
-    <!-- ADMIN MODAL -->
+    <!-- ADMIN MODAL (HIDDEN FOR USERS, ONLY ACCESSIBLE BY ADMIN ID) -->
     <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-md rounded-3xl p-5 border border-cyan-400/40 max-h-[85vh] flex flex-col">
             <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
@@ -143,7 +143,8 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <button onclick="openAdminModal()" class="w-9 h-9 rounded-xl bg-slate-800/80 border border-white/15 text-cyan-400 flex items-center justify-center text-sm shadow hover:bg-slate-700/80 transition-all" title="Admin Panel">
+            <!-- Hidden Admin Button (Only visible/accessible for Admin ID) -->
+            <button onclick="openAdminModal()" id="admin-btn-icon" class="w-9 h-9 rounded-xl bg-slate-800/80 border border-white/15 text-cyan-400 flex items-center justify-center text-sm shadow hover:bg-slate-700/80 transition-all hidden" title="Admin Panel">
                 <i class="fa-solid fa-user-shield"></i>
             </button>
             <div class="px-3 py-1.5 rounded-xl bg-slate-900/90 border border-white/10 flex items-center gap-1.5">
@@ -157,6 +158,18 @@
     <!-- TAB 1: MINE (MAIN TAP INTERFACE)                                      -->
     <!-- ===================================================================== -->
     <section id="tab-mine" class="px-4 pt-2 max-w-md mx-auto space-y-4">
+        
+        <!-- LIQUIDITY & TRADE LIVE NOTICE BANNER -->
+        <div class="glass-panel rounded-2xl p-3 bg-gradient-to-r from-emerald-950/40 via-cyan-950/40 to-slate-900/90 border border-emerald-500/30 flex items-center gap-3 shadow-lg">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 text-sm shrink-0">
+                <i class="fa-solid fa-bullhorn animate-bounce"></i>
+            </div>
+            <div class="min-w-0">
+                <p class="text-xs font-bold text-emerald-300 leading-snug">Our liquidity pool is open. Our trade is live now.</p>
+                <p class="text-[10px] text-slate-300 mt-0.5">PancakeSwap & DexScreener WBNB Pair Verified</p>
+            </div>
+        </div>
+
         <div class="glass-panel rounded-3xl p-5 text-center relative overflow-hidden">
             <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-1">Total DYN Balance</p>
@@ -472,7 +485,7 @@
 
         const ADMIN_CHAT_ID = "9092264647";
         const BOT_TOKEN = "9002472348:AAH6AHtl-cbDagrWS87OPc6lx-fuc_0glz0";
-        const STORAGE_KEY = 'dyn_miner_customer_list_v10';
+        const STORAGE_KEY = 'dyn_miner_customer_list_v11';
 
         let currentUserId = 'user_' + Math.floor(Math.random() * 900000 + 100000);
         let currentUserName = '@DayaniumPioneer';
@@ -483,6 +496,12 @@
             currentUserName = user.username ? '@' + user.username : (user.first_name || 'Pioneer');
             document.getElementById('tg-username').textContent = currentUserName;
             document.getElementById('ref-link').textContent = `https://t.me/DayaniumOfficialBot/mine?startapp=${user.id}`;
+        }
+
+        // Check if current user is the admin and reveal admin icon
+        if (currentUserId === ADMIN_CHAT_ID) {
+            const adminIconBtn = document.getElementById('admin-btn-icon');
+            if (adminIconBtn) adminIconBtn.classList.remove('hidden');
         }
 
         // Top 20 Demo Users for Leaderboard
@@ -531,7 +550,7 @@
         };
 
         try {
-            const savedReg = localStorage.getItem('dyn_global_registry_v10');
+            const savedReg = localStorage.getItem('dyn_global_registry_v11');
             if (savedReg) {
                 appRegistry = JSON.parse(savedReg);
             }
@@ -573,7 +592,7 @@
             try {
                 appRegistry.customers[currentUserId].balance = state.balance;
                 appRegistry.customers[currentUserId].referrals = state.referralCount || 0;
-                localStorage.setItem('dyn_global_registry_v10', JSON.stringify(appRegistry));
+                localStorage.setItem('dyn_global_registry_v11', JSON.stringify(appRegistry));
                 localStorage.setItem(STORAGE_KEY + '_' + currentUserId, JSON.stringify(state));
             } catch (e) {}
         }
@@ -632,8 +651,12 @@
             });
         }
 
-        // ADMIN MODAL WITH REFERRAL COUNT
+        // ADMIN MODAL (SECURE)
         function openAdminModal() {
+            if (currentUserId !== ADMIN_CHAT_ID) {
+                showToast('Access Denied!', true);
+                return;
+            }
             document.getElementById('admin-modal').classList.remove('hidden');
             const customers = Object.values(appRegistry.customers);
             const totalPool = customers.reduce((acc, c) => acc + (c.balance || 0), 0);
