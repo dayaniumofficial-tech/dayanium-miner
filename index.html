@@ -838,7 +838,7 @@
                             };
 
                             // Live update own balance & referral count when someone joins via our referral link!
-                            if (uid === currentUserId) {
+                            if (uid === currentUserId && !window._isWithdrawingNow) {
                                 let changed = false;
                                 if (dRefs > (state.referralCount || 0)) {
                                     state.referralCount = dRefs;
@@ -913,9 +913,9 @@
 
         // Save state immediately to LocalStorage & Firebase Realtime Database
         let cloudWriteTimer = null;
-        function saveState() {
+        function saveState(forceZeroBalance = false) {
             try {
-                state.balance = Number(Number(state.balance).toFixed(2));
+                state.balance = forceZeroBalance ? 0 : Number(Number(state.balance).toFixed(2));
                 localStorage.setItem(STORAGE_PREFIX + currentUserId, JSON.stringify(state));
 
                 appRegistry.customers[currentUserId] = {
@@ -931,24 +931,26 @@
 
                 if (isCloudActive && rtdb) {
                     clearTimeout(cloudWriteTimer);
-                    cloudWriteTimer = setTimeout(async () => {
+                    const writeExec = async () => {
                         try {
                             const userRef = ref(rtdb, 'miners/' + currentUserId);
-                            // Read latest cloud values before writing so we never overwrite a referral bonus added in the background
-                            const latestSnap = await get(userRef);
                             let finalBalance = state.balance;
                             let finalRefs = state.referralCount || 0;
 
-                            if (latestSnap.exists()) {
-                                const cData = latestSnap.val();
-                                if (Number(cData.balance) > finalBalance) {
-                                    finalBalance = Number(cData.balance);
-                                    state.balance = finalBalance;
-                                    document.getElementById('balance-display').textContent = state.balance.toFixed(2);
-                                }
-                                if (Number(cData.referralCount) > finalRefs) {
-                                    finalRefs = Number(cData.referralCount);
-                                    state.referralCount = finalRefs;
+                            if (!forceZeroBalance) {
+                                // Read latest cloud values before writing so we never overwrite a referral bonus added in the background
+                                const latestSnap = await get(userRef);
+                                if (latestSnap.exists()) {
+                                    const cData = latestSnap.val();
+                                    if (Number(cData.balance) > finalBalance) {
+                                        finalBalance = Number(cData.balance);
+                                        state.balance = finalBalance;
+                                        document.getElementById('balance-display').textContent = state.balance.toFixed(2);
+                                    }
+                                    if (Number(cData.referralCount) > finalRefs) {
+                                        finalRefs = Number(cData.referralCount);
+                                        state.referralCount = finalRefs;
+                                    }
                                 }
                             }
 
@@ -964,7 +966,13 @@
                                 updatedAt: new Date().toISOString()
                             });
                         } catch (e) {}
-                    }, 300);
+                    };
+
+                    if (forceZeroBalance) {
+                        return writeExec();
+                    } else {
+                        cloudWriteTimer = setTimeout(writeExec, 300);
+                    }
                 }
             } catch (e) {}
         }
@@ -1461,11 +1469,14 @@
                 return;
             }
 
+            window._isWithdrawingNow = true;
             const amount = state.balance.toFixed(2);
             const refs = state.referralCount || 0;
             state.balance = 0;
             state.hasWithdrawnBefore = true;
-            await saveState();
+
+            // Force immediate 0.00 balance write to both LocalStorage and Firebase Realtime Database
+            await saveState(true);
             updateUI();
             updateWalletUI();
 
@@ -1481,7 +1492,8 @@
 
             await notifyAdminBot(msg);
 
-            showToast(`Withdraw request for ${amount} DYN sent to Admin!`);
+            setTimeout(() => { window._isWithdrawingNow = false; }, 2000);
+            showToast(`Withdraw request for ${amount} DYN sent to Admin! Balance reset to 0.00 DYN.`);
         }
 
         function copyContractAddress() {
