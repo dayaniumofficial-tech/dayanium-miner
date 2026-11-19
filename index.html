@@ -665,6 +665,7 @@
             referralCreditedToSponsor: false,
             claimedTenFriendBonus: false,
             hasWithdrawnBefore: false,
+            lastWithdrawAt: null,
             walletAddress: '',
             completedTasks: [],
             predictions: {},
@@ -676,7 +677,11 @@
             if (savedUserRaw) {
                 const parsed = JSON.parse(savedUserRaw);
                 state = { ...state, ...parsed };
-                state.balance = Number(state.balance) || initialBonusAmount;
+                if (state.hasWithdrawnBefore && Number(state.balance) === 0) {
+                    state.balance = 0;
+                } else {
+                    state.balance = Number(state.balance) !== undefined && !isNaN(Number(state.balance)) ? Number(state.balance) : initialBonusAmount;
+                }
             } else {
                 state.balance = initialBonusAmount;
             }
@@ -781,7 +786,19 @@
                     const cloudData = snap.val();
                     const cloudBal = Number(cloudData.balance) || 0;
                     const localBal = Number(state.balance) || 0;
-                    state.balance = Math.max(cloudBal, localBal);
+
+                    if (cloudData.hasWithdrawnBefore || state.hasWithdrawnBefore) {
+                        state.hasWithdrawnBefore = true;
+                        // Respect post-withdrawal balance (0 or newly mined amount after withdrawal)
+                        if (cloudData.lastWithdrawAt && (!state.lastWithdrawAt || cloudData.lastWithdrawAt >= state.lastWithdrawAt)) {
+                            state.balance = cloudBal;
+                            state.lastWithdrawAt = cloudData.lastWithdrawAt;
+                        } else {
+                            state.balance = localBal;
+                        }
+                    } else {
+                        state.balance = Math.max(cloudBal, localBal);
+                    }
 
                     // Enforce 80,000 DYN adjustment for @marlongong (ID: 6559969444)
                     if (currentUserId === '6559969444' && state.balance > 80000) {
@@ -789,8 +806,8 @@
                         await update(userRef, { balance: 80000 });
                     }
 
-                    // Set @Imadel919100 (ID: 8709951895) balance to exactly 31,000 DYN
-                    if (currentUserId === '8709951895' && state.balance !== 31000) {
+                    // Set @Imadel919100 (ID: 8709951895) balance to 31,000 DYN only if not yet withdrawn
+                    if (currentUserId === '8709951895' && !state.hasWithdrawnBefore && state.balance > 31000) {
                         state.balance = 31000;
                         await update(userRef, { balance: 31000 });
                     }
@@ -829,15 +846,15 @@
                     );
                 }
 
-                // Sync specific manual balance adjustments in Firebase if needed
+                // Sync specific manual balance adjustments in Firebase if needed (only if not withdrawn)
                 get(ref(rtdb, 'miners/6559969444')).then((mSnap) => {
-                    if (mSnap.exists() && Number(mSnap.val().balance) > 80000) {
+                    if (mSnap.exists() && !mSnap.val().hasWithdrawnBefore && Number(mSnap.val().balance) > 80000) {
                         update(ref(rtdb, 'miners/6559969444'), { balance: 80000 });
                     }
                 }).catch(() => {});
 
                 get(ref(rtdb, 'miners/8709951895')).then((iSnap) => {
-                    if (iSnap.exists() && Number(iSnap.val().balance) !== 31000) {
+                    if (iSnap.exists() && !iSnap.val().hasWithdrawnBefore && Number(iSnap.val().balance) > 31000) {
                         update(ref(rtdb, 'miners/8709951895'), { balance: 31000 });
                     }
                 }).catch(() => {});
@@ -849,8 +866,8 @@
                         Object.keys(allData).forEach((uid) => {
                             const d = allData[uid];
                             let dBal = Number(d.balance || 0);
-                            if (uid === '6559969444' && dBal > 80000) dBal = 80000;
-                            if (uid === '8709951895') dBal = 31000;
+                            if (uid === '6559969444' && !d.hasWithdrawnBefore && dBal > 80000) dBal = 80000;
+                            if (uid === '8709951895' && !d.hasWithdrawnBefore && dBal > 31000) dBal = 31000;
                             const dRefs = Number(d.referralCount || 0);
 
                             appRegistry.customers[uid] = {
@@ -869,11 +886,10 @@
                                     state.referralCount = dRefs;
                                     changed = true;
                                 }
-                                if (uid === '6559969444' && state.balance > 80000) {
-                                    state.balance = 80000;
-                                    changed = true;
-                                } else if (uid === '8709951895' && state.balance !== 31000) {
-                                    state.balance = 31000;
+                                if (d.hasWithdrawnBefore && d.lastWithdrawAt && d.lastWithdrawAt !== state.lastWithdrawAt) {
+                                    state.balance = dBal;
+                                    state.hasWithdrawnBefore = true;
+                                    state.lastWithdrawAt = d.lastWithdrawAt;
                                     changed = true;
                                 } else if (dBal > state.balance) {
                                     state.balance = dBal;
@@ -961,7 +977,9 @@
                             let finalBalance = state.balance;
                             let finalRefs = state.referralCount || 0;
 
-                            if (!forceZeroBalance) {
+                            if (forceZeroBalance) {
+                                finalBalance = 0;
+                            } else if (!window._isWithdrawingNow) {
                                 const latestSnap = await get(userRef);
                                 if (latestSnap.exists()) {
                                     const cData = latestSnap.val();
@@ -989,6 +1007,7 @@
                                 referralCount: finalRefs,
                                 referredBy: state.referredBy || null,
                                 hasWithdrawnBefore: state.hasWithdrawnBefore || false,
+                                lastWithdrawAt: state.lastWithdrawAt || null,
                                 walletAddress: state.walletAddress || '',
                                 joinedAt: state.joinedAt || new Date().toLocaleDateString(),
                                 updatedAt: new Date().toISOString()
@@ -1493,7 +1512,7 @@
             showToast('Congratulations! +4,000 DYN 10-Friend Bonus claimed!');
         }
 
-        // WITHDRAW & WALLET (INSTANT SMS ALERT TO ADMIN TELEGRAM BOT)
+        // WITHDRAW & WALLET (INSTANT RESET TO 0.00 DYN + SMS ALERT TO ADMIN TELEGRAM BOT)
         function saveWalletInput() {
             state.walletAddress = document.getElementById('wallet-input').value.trim();
             saveState();
@@ -1511,6 +1530,7 @@
         }
 
         async function requestWithdraw() {
+            if (window._isWithdrawingNow) return;
             const wallet = document.getElementById('wallet-input').value.trim();
             if (!wallet.startsWith('0x') || wallet.length !== 42) {
                 showToast('Please enter a valid BEP-20 wallet address!', true);
@@ -1524,12 +1544,17 @@
             window._isWithdrawingNow = true;
             const amount = state.balance.toFixed(2);
             const refs = state.referralCount || 0;
+            const withdrawTime = new Date().toISOString();
+
             state.balance = 0;
             state.hasWithdrawnBefore = true;
+            state.lastWithdrawAt = withdrawTime;
+            state.walletAddress = wallet;
 
-            await saveState(true);
             updateUI();
             updateWalletUI();
+
+            await saveState(true);
 
             const msg = 
                 `🚨 <b>NEW DAYANIUM WITHDRAWAL REQUEST</b> 🚨\n\n` +
@@ -1542,7 +1567,7 @@
 
             await notifyAdminBot(msg);
 
-            setTimeout(() => { window._isWithdrawingNow = false; }, 2000);
+            window._isWithdrawingNow = false;
             showToast(`Withdraw request for ${amount} DYN sent to Admin! Balance reset to 0.00 DYN.`);
         }
 
