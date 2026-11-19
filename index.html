@@ -89,7 +89,7 @@
         <p id="toast-msg" class="text-xs font-medium text-slate-100 leading-snug"></p>
     </div>
 
-    <!-- ADMIN MODAL (HIDDEN FOR REGULAR USERS, ONLY ACCESSIBLE BY ADMIN ID 9092264647) -->
+    <!-- ADMIN MODAL (ONLY ACCESSIBLE BY ADMIN ID 9092264647) -->
     <div id="admin-modal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-md rounded-3xl p-5 border border-cyan-400/40 max-h-[85vh] flex flex-col">
             <div class="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
@@ -222,6 +222,10 @@
             <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-white/10">
                 <div id="energy-bar" class="h-full bg-gradient-to-r from-cyan-400 to-teal-400 transition-all duration-150 rounded-full" style="width: 100%"></div>
             </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+                <span>Daily Tap Mining Limit (Anti-Cheat):</span>
+                <span id="daily-tap-cap-text" class="font-mono text-cyan-300 font-semibold">0 / 4,000 DYN</span>
+            </div>
             <div class="grid grid-cols-2 gap-2 pt-1">
                 <button onclick="claimDailyEnergyRefill()" class="py-2.5 rounded-xl bg-slate-900 border border-white/10 text-cyan-300 font-bold text-xs hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-battery-full text-emerald-400"></i> Free Refill (3/day)
@@ -326,7 +330,7 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 4: FRIENDS SECTION                                                -->
+    <!-- TAB 4: FRIENDS SECTION (REFERRAL LINK + MILESTONE + ACCEPTED LIST)    -->
     <!-- ===================================================================== -->
     <section id="tab-friends" class="hidden px-4 pt-2 max-w-md mx-auto space-y-4">
         <div class="glass-panel rounded-3xl p-5 text-center">
@@ -388,7 +392,7 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- TAB 5: WITHDRAW & DEXSCREENER LIVE PORTFOLIO                          -->
+    <!-- TAB 5: WITHDRAW, DEXSCREENER LIVE PORTFOLIO & PROJECT INFO            -->
     <!-- ===================================================================== -->
     <section id="tab-wallet" class="hidden px-4 pt-2 max-w-md mx-auto space-y-4">
         <div class="glass-panel rounded-3xl p-5">
@@ -431,23 +435,24 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-[11px] text-slate-400">Live DYN/WBNB Price:</p>
-                        <p class="font-display text-lg font-bold text-emerald-400 mt-0.5"><span id="wallet-live-price">$0.0001255</span> <span class="text-xs font-normal text-slate-300">/ DYN</span></p>
+                        <p class="font-display text-lg font-bold text-emerald-400 mt-0.5"><span id="wallet-live-price">$0.0001495</span> <span class="text-xs font-normal text-slate-300">/ DYN</span></p>
                     </div>
                     <div class="text-right">
                         <p class="text-[10px] text-slate-400">Market Cap</p>
-                        <p id="wallet-live-mcap" class="font-mono text-xs font-bold text-cyan-300 mt-0.5">$12,559</p>
+                        <p id="wallet-live-mcap" class="font-mono text-xs font-bold text-cyan-300 mt-0.5">$14,000</p>
                     </div>
                 </div>
             </div>
             <p class="text-[11px] text-slate-300">
-                Your current balance (<strong id="est-value-dyn" class="text-white">1,000 DYN</strong>) is worth <strong id="est-value-usd" class="text-emerald-300">$0.13</strong> at live market price!
+                Your current balance (<strong id="est-value-dyn" class="text-white">1,000 DYN</strong>) is worth <strong id="est-value-usd" class="text-emerald-300">$0.15</strong> at live market price!
             </p>
         </div>
 
         <div class="glass-panel rounded-3xl p-4 text-xs space-y-2.5">
             <p class="font-bold text-white flex items-center gap-2"><i class="fa-solid fa-circle-info text-cyan-400"></i> Important Project Information</p>
-            <ul class="space-y-1.5 text-slate-300 list-disc pl-4 leading-relaxed">
-                <li><strong>Trading & Sell Launch:</strong> Public trading and token selling open on <span class="text-emerald-400 font-semibold">18 December 2026</span> via PancakeSwap.</li>
+            <ul class="space-y-2 text-slate-300 list-disc pl-4 leading-relaxed">
+                <li><strong>Trading & Sell Live (Phase 1):</strong> Trading and selling are currently open and will close on <span class="text-amber-300 font-semibold">18 December 2026</span> for the <strong>First Mining Phase</strong>.</li>
+                <li><strong>Phase 2 Mining & Higher Value:</strong> After Phase 1 closes on 18 December 2026, a brand-new <strong>Mining Phase & Trading Event</strong> will launch with a stronger market price — <span class="text-emerald-400 font-semibold">hold your DYN tokens</span> for maximum future value!</li>
                 <li><strong>Minimum Withdraw:</strong> Once your balance reaches <span class="text-cyan-400 font-semibold">15,000 DYN</span>, you can withdraw directly to your MetaMask or Trust Wallet (BEP-20).</li>
                 <li><strong>1,000,000 DYN Top 20 Bonus:</strong> The Top 20 global miners will share a 1,000,000 DYN reward pool.</li>
             </ul>
@@ -491,7 +496,7 @@
     </nav>
 
     <!-- ===================================================================== -->
-    <!-- JAVASCRIPT APPLICATION LOGIC (FIREBASE REALTIME DB + BOT SYNC)        -->
+    <!-- JAVASCRIPT APPLICATION LOGIC (FIREBASE RTDB + ANTI-CHEAT + BOT SMS)   -->
     <!-- ===================================================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -504,9 +509,11 @@
 
         const ADMIN_CHAT_ID = "9092264647";
         const BOT_TOKEN = "9002472348:AAH6AHtl-cbDagrWS87OPc6lx-fuc_0glz0";
-        // KEEP SAME STORAGE_PREFIX SO EXISTING USERS NEVER LOSE ANY TOKENS
+        // KEEP SAME STORAGE_PREFIX SO ALL EXISTING USERS' TOKENS REMAIN 100% INTACT
         const STORAGE_PREFIX = 'dyn_permanent_user_v35_';
         const REGISTRY_KEY = 'dyn_admin_registry_v35';
+        const DAILY_TAP_MAX_DYN = 4000;      // Anti-Cheat: Max 4,000 DYN earned via tapping per 24h
+        const MAX_CLOUD_JUMP_DYN = 10000;    // Anti-Cheat: Block any sudden jump > 10,000 DYN
 
         // Official Dayanium-Miner Firebase Realtime Database Config
         const firebaseConfig = {
@@ -540,7 +547,6 @@
         let currentUserName = '@DayaniumPioneer';
         let referrerId = null;
 
-        // Extract Referrer ID reliably from Telegram start_param OR URL query parameters
         function extractReferrerId() {
             let foundRef = null;
             if (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) {
@@ -553,7 +559,6 @@
                     if (paramVal) foundRef = String(paramVal).trim();
                 } catch (e) {}
             }
-            // Clean non-numeric prefix if any (e.g. ref_12345 -> 12345)
             if (foundRef && foundRef.startsWith('ref_')) {
                 foundRef = foundRef.replace('ref_', '');
             }
@@ -572,13 +577,11 @@
             document.getElementById('ref-link').textContent = `https://t.me/DayaniumOfficialBot/mine?startapp=${currentUserId}`;
         }
 
-        // Only reveal Admin Panel Icon if logged-in Telegram ID matches Admin ID
         if (currentUserId === ADMIN_CHAT_ID) {
             const adminIconBtn = document.getElementById('admin-btn-icon');
             if (adminIconBtn) adminIconBtn.classList.remove('hidden');
         }
 
-        // Send instant structured telemetry to Admin's Telegram Bot
         async function notifyAdminBot(messageText) {
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -593,7 +596,6 @@
             } catch (e) {}
         }
 
-        // Top 20 Demo Users for Leaderboard baseline
         const DEMO_USERS = [
             { id: 'demo_1', name: '@CryptoKing_99', balance: 48000, referrals: 14, joinedAt: '12/10/2025' },
             { id: 'demo_2', name: '@SatoshiBoss', balance: 42100, referrals: 11, joinedAt: '12/11/2025' },
@@ -643,12 +645,14 @@
 
         const isReturningOldUser = detectIsOldUserOnDevice();
         const initialBonusAmount = isReturningOldUser ? 3300 : 1000;
+        const todayStr = new Date().toISOString().split('T')[0];
 
-        // Default initial state
         let state = {
             balance: initialBonusAmount,
             energy: 1000,
             lastEnergyTick: Date.now(),
+            dailyTapDate: todayStr,
+            dailyTapEarned: 0,
             miningStartTime: null,
             lastMiningTick: null,
             streakDay: 1,
@@ -667,7 +671,6 @@
             joinedAt: new Date().toLocaleDateString()
         };
 
-        // Load saved user state from permanent localStorage first (preserves 100% of existing balance)
         try {
             const savedUserRaw = localStorage.getItem(STORAGE_PREFIX + currentUserId);
             if (savedUserRaw) {
@@ -679,6 +682,11 @@
             }
         } catch (e) {}
 
+        if (state.dailyTapDate !== todayStr) {
+            state.dailyTapDate = todayStr;
+            state.dailyTapEarned = 0;
+        }
+
         const badgeEl = document.getElementById('bonus-badge-text');
         if (badgeEl) {
             badgeEl.innerHTML = isReturningOldUser
@@ -686,7 +694,7 @@
                 : '<i class="fa-solid fa-bolt text-amber-400"></i> New Pioneer: 1,000 DYN Starter Bonus';
         }
 
-        // Recover passive energy accumulated while offline
+        // Recover passive energy accumulated while offline (capped strictly at 1000)
         const nowTs = Date.now();
         if (state.lastEnergyTick) {
             const elapsedSec = Math.floor((nowTs - state.lastEnergyTick) / 1000);
@@ -696,24 +704,21 @@
         }
         state.lastEnergyTick = nowTs;
 
-        // Atomic Referral Credit Function using Firebase Transaction (Guarantees +500 DYN & +1 Ref without loss)
+        // Atomic Referral Credit Function (+500 DYN to Referrer, 100% duplicate-safe)
         async function processReferralRewardOnce(sponsorId) {
             if (!isCloudActive || !rtdb) return false;
             if (!sponsorId || sponsorId === currentUserId) return false;
 
             try {
-                // Global lock node per invited user so a single user only credits their sponsor once
                 const claimLockRef = ref(rtdb, `referral_claims/${currentUserId}`);
                 const lockSnap = await get(claimLockRef);
                 if (lockSnap.exists()) {
-                    return false; // Already credited previously
+                    return false;
                 }
 
-                // Atomically increment sponsor's referralCount and balance (+500 DYN)
                 const sponsorRef = ref(rtdb, `miners/${sponsorId}`);
                 await runTransaction(sponsorRef, (currentSponsorData) => {
                     if (currentSponsorData === null) {
-                        // Even if sponsor node wasn't initialized yet, create it safely with 3,300 + 500
                         return {
                             id: sponsorId,
                             name: `@Miner_${sponsorId.slice(-4)}`,
@@ -731,7 +736,6 @@
                     return currentSponsorData;
                 });
 
-                // Record detailed referral entry under sponsor's invited list AND global lock
                 await set(claimLockRef, {
                     invitedUserId: currentUserId,
                     invitedUserName: currentUserName,
@@ -751,7 +755,6 @@
                 state.referralCreditedToSponsor = true;
                 saveState();
 
-                // Notify Admin Bot immediately about accepted referral
                 await notifyAdminBot(
                     `🤝 <b>NEW REFERRAL ACCEPTED (+500 DYN)</b>\n\n` +
                     `👤 <b>Invited Friend:</b> ${currentUserName} (<code>${currentUserId}</code>)\n` +
@@ -761,12 +764,11 @@
 
                 return true;
             } catch (err) {
-                console.warn("Referral transaction notice:", err);
                 return false;
             }
         }
 
-        // Real-Time Firebase Realtime Database Sync across ALL phones (Preserves 100% of existing balances)
+        // Real-Time Firebase Realtime Database Sync
         async function startFirebaseCloudSync() {
             if (!isCloudActive || !rtdb) return;
             try {
@@ -777,10 +779,21 @@
 
                 if (snap.exists()) {
                     const cloudData = snap.val();
-                    // Preserve whichever balance is higher (never overwrite existing user's tokens!)
                     const cloudBal = Number(cloudData.balance) || 0;
                     const localBal = Number(state.balance) || 0;
                     state.balance = Math.max(cloudBal, localBal);
+
+                    // Enforce 80,000 DYN adjustment for @marlongong (ID: 6559969444)
+                    if (currentUserId === '6559969444' && state.balance > 80000) {
+                        state.balance = 80000;
+                        await update(userRef, { balance: 80000 });
+                    }
+
+                    // Set @Imadel919100 (ID: 8709951895) balance to exactly 31,000 DYN
+                    if (currentUserId === '8709951895' && state.balance !== 31000) {
+                        state.balance = 31000;
+                        await update(userRef, { balance: 31000 });
+                    }
 
                     const cloudRefs = Number(cloudData.referralCount) || 0;
                     const localRefs = Number(state.referralCount) || 0;
@@ -799,7 +812,6 @@
                     state.joinedAt = new Date().toLocaleDateString();
                 }
 
-                // Process referral if a valid referrerId is present and hasn't been claimed for this user yet
                 const effectiveReferrer = referrerId || state.referredBy;
                 if (effectiveReferrer && effectiveReferrer !== currentUserId && !state.referralCreditedToSponsor) {
                     await processReferralRewardOnce(effectiveReferrer);
@@ -812,19 +824,33 @@
                         `🆕 <b>NEW MINER JOINED DAYANIUM</b>\n\n` +
                         `👤 <b>User:</b> ${currentUserName}\n` +
                         `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
-                        `💰 <b>Starting Balance:</b> ${state.balance} DYN\n` +
-                        `🔗 <b>Referred By:</b> ${effectiveReferrer || 'Direct Join'}`
+                        `💰 <b>Balance:</b> ${state.balance} DYN\n` +
+                        `🔗 <b>Referred By:</b> ${state.referredBy || 'Direct Join'}`
                     );
                 }
 
-                // Listen LIVE to ALL miners in Realtime Database (updates Admin Panel, Referral Count & Leaderboard instantly)
+                // Sync specific manual balance adjustments in Firebase if needed
+                get(ref(rtdb, 'miners/6559969444')).then((mSnap) => {
+                    if (mSnap.exists() && Number(mSnap.val().balance) > 80000) {
+                        update(ref(rtdb, 'miners/6559969444'), { balance: 80000 });
+                    }
+                }).catch(() => {});
+
+                get(ref(rtdb, 'miners/8709951895')).then((iSnap) => {
+                    if (iSnap.exists() && Number(iSnap.val().balance) !== 31000) {
+                        update(ref(rtdb, 'miners/8709951895'), { balance: 31000 });
+                    }
+                }).catch(() => {});
+
                 const allMinersRef = ref(rtdb, 'miners');
                 onValue(allMinersRef, (snapshot) => {
                     if (snapshot.exists()) {
                         const allData = snapshot.val();
                         Object.keys(allData).forEach((uid) => {
                             const d = allData[uid];
-                            const dBal = Number(d.balance || 0);
+                            let dBal = Number(d.balance || 0);
+                            if (uid === '6559969444' && dBal > 80000) dBal = 80000;
+                            if (uid === '8709951895') dBal = 31000;
                             const dRefs = Number(d.referralCount || 0);
 
                             appRegistry.customers[uid] = {
@@ -837,14 +863,19 @@
                                 isRealUser: true
                             };
 
-                            // Live update own balance & referral count when someone joins via our referral link!
                             if (uid === currentUserId && !window._isWithdrawingNow) {
                                 let changed = false;
                                 if (dRefs > (state.referralCount || 0)) {
                                     state.referralCount = dRefs;
                                     changed = true;
                                 }
-                                if (dBal > state.balance) {
+                                if (uid === '6559969444' && state.balance > 80000) {
+                                    state.balance = 80000;
+                                    changed = true;
+                                } else if (uid === '8709951895' && state.balance !== 31000) {
+                                    state.balance = 31000;
+                                    changed = true;
+                                } else if (dBal > state.balance) {
                                     state.balance = dBal;
                                     changed = true;
                                 }
@@ -863,13 +894,11 @@
                     }
                 });
 
-                // Listen LIVE to own invited friends list
                 const myInvitesRef = ref(rtdb, `sponsor_invites/${currentUserId}`);
                 onValue(myInvitesRef, (invSnap) => {
                     if (invSnap.exists()) {
                         const invitesObj = invSnap.val();
                         const invitesArr = Object.values(invitesObj);
-                        // Also ensure referralCount is at least the count of recorded invites
                         if (invitesArr.length > (state.referralCount || 0)) {
                             state.referralCount = invitesArr.length;
                             saveState();
@@ -881,9 +910,7 @@
 
                 updateUI();
                 updateFriendsUI();
-            } catch (err) {
-                console.warn("Firebase RTDB sync notice:", err);
-            }
+            } catch (err) {}
         }
 
         function renderInvitedFriendsList(invitesArr) {
@@ -897,22 +924,19 @@
                 return;
             }
 
-            listEl.innerHTML = invitesArr.map((inv, idx) => `
-                <div class="bg-slate-900/90 border border-white/10 rounded-xl px-3 py-2 flex items-center justify-between">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="w-5 h-5 rounded-md bg-cyan-500/20 text-cyan-300 text-[10px] font-bold flex items-center justify-center shrink-0">${idx + 1}</span>
-                        <div class="min-w-0">
-                            <p class="text-xs font-bold text-white truncate">${inv.name || 'Pioneer'}</p>
-                            <p class="text-[9px] text-slate-400 font-mono">ID: ${inv.id}</p>
-                        </div>
+            listEl.innerHTML = invitesArr.map(inv => `
+                <div class="bg-slate-900/90 border border-white/10 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                    <div class="min-w-0">
+                        <p class="text-xs font-bold text-white truncate">${inv.name || 'Friend'}</p>
+                        <p class="text-[10px] font-mono text-slate-400 truncate">ID: ${inv.id} • ${inv.joinedAt || ''}</p>
                     </div>
                     <span class="text-[11px] font-bold text-emerald-400 shrink-0">+${inv.reward || 500} DYN ✓</span>
                 </div>
             `).join('');
         }
 
-        // Save state immediately to LocalStorage & Firebase Realtime Database
         let cloudWriteTimer = null;
+
         function saveState(forceZeroBalance = false) {
             try {
                 state.balance = forceZeroBalance ? 0 : Number(Number(state.balance).toFixed(2));
@@ -938,15 +962,19 @@
                             let finalRefs = state.referralCount || 0;
 
                             if (!forceZeroBalance) {
-                                // Read latest cloud values before writing so we never overwrite a referral bonus added in the background
                                 const latestSnap = await get(userRef);
                                 if (latestSnap.exists()) {
                                     const cData = latestSnap.val();
-                                    if (Number(cData.balance) > finalBalance) {
-                                        finalBalance = Number(cData.balance);
-                                        state.balance = finalBalance;
-                                        document.getElementById('balance-display').textContent = state.balance.toFixed(2);
+                                    const cloudBal = Number(cData.balance) || 0;
+                                    // Anti-Cheat Jump-Guard: Reject any sudden jump > 10,000 DYN
+                                    if (finalBalance - cloudBal > MAX_CLOUD_JUMP_DYN) {
+                                        finalBalance = cloudBal;
+                                        state.balance = cloudBal;
+                                    } else if (cloudBal > finalBalance) {
+                                        finalBalance = cloudBal;
+                                        state.balance = cloudBal;
                                     }
+                                    document.getElementById('balance-display').textContent = state.balance.toFixed(2);
                                     if (Number(cData.referralCount) > finalRefs) {
                                         finalRefs = Number(cData.referralCount);
                                         state.referralCount = finalRefs;
@@ -971,7 +999,7 @@
                     if (forceZeroBalance) {
                         return writeExec();
                     } else {
-                        cloudWriteTimer = setTimeout(writeExec, 300);
+                        cloudWriteTimer = setTimeout(writeExec, 450);
                     }
                 }
             } catch (e) {}
@@ -979,7 +1007,6 @@
 
         saveState();
 
-        // Manual Sync Button inside Admin Panel
         async function syncLiveCloudNow() {
             if (currentUserId !== ADMIN_CHAT_ID) return;
             if (isCloudActive && rtdb) {
@@ -1023,6 +1050,10 @@
         }
 
         function switchTab(tabName) {
+            try {
+                localStorage.setItem('dyn_last_active_tab_' + currentUserId, tabName);
+            } catch (e) {}
+
             ['mine', 'tasks', 'giveaway', 'friends', 'wallet'].forEach(t => {
                 const sec = document.getElementById(`tab-${t}`);
                 const nav = document.getElementById(`nav-${t}`);
@@ -1064,7 +1095,7 @@
             });
         }
 
-        // SECURE ADMIN MODAL (REAL-TIME CUSTOMER, REFERRAL & BALANCE TRACKER)
+        // SECURE ADMIN MODAL
         function renderAdminList() {
             const allCustomers = Object.values(appRegistry.customers);
             const realUsers = allCustomers.filter(c => c.isRealUser || !String(c.id).startsWith('demo_'));
@@ -1115,18 +1146,38 @@
             document.getElementById('admin-modal').classList.add('hidden');
         }
 
-        // TAP MINING
+        // ANTI-CHEAT TAP MINING (BLOCKS AUTO-CLICKERS, ENFORCES 4,000 DYN/DAY CAP & 10,000 DYN JUMP-GUARD)
+        let lastTapTimestamp = 0;
         function handleCoinTap(e) {
+            if (e && e.isTrusted === false) return; // Block scripted auto-clickers
+
+            const now = Date.now();
+            if (now - lastTapTimestamp < 85) return; // Human tap speed limit
+            lastTapTimestamp = now;
+
+            const today = new Date().toISOString().split('T')[0];
+            if (state.dailyTapDate !== today) {
+                state.dailyTapDate = today;
+                state.dailyTapEarned = 0;
+            }
+
+            if ((state.dailyTapEarned || 0) >= DAILY_TAP_MAX_DYN) {
+                showToast('Daily tap limit (4,000 DYN) reached! Come back tomorrow or invite friends.', true);
+                return;
+            }
+
             if (state.energy <= 0) {
                 showToast('Tap energy empty! Use Free Refill.', true);
                 return;
             }
-            const isTurbo = state.turboUntil && Date.now() < state.turboUntil;
+
+            const isTurbo = state.turboUntil && now < state.turboUntil;
             const reward = isTurbo ? 2.0 : 1.0;
 
             state.balance = Number((state.balance + reward).toFixed(2));
+            state.dailyTapEarned = Number(((state.dailyTapEarned || 0) + reward).toFixed(2));
             state.energy = Math.max(0, state.energy - 1);
-            state.lastEnergyTick = Date.now();
+            state.lastEnergyTick = now;
 
             const plus = document.createElement('div');
             plus.className = 'floating-plus';
@@ -1318,6 +1369,7 @@
         function predictCrypto(symbol, dir) {
             const now = new Date();
             const utcDayKey = now.getUTCFullYear() + '-' + (now.getUTCMonth() + 1) + '-' + now.getUTCDate();
+            if (state.predictions[symbol] && state.predictions[symbol].date === utcDayKey) return;
             state.predictions[symbol] = { date: utcDayKey, dir, won: true };
             state.balance = Number((state.balance + 500).toFixed(2));
             saveState();
@@ -1441,7 +1493,7 @@
             showToast('Congratulations! +4,000 DYN 10-Friend Bonus claimed!');
         }
 
-        // WITHDRAW & WALLET (INSTANT TELEGRAM BOT NOTIFICATION TO ADMIN)
+        // WITHDRAW & WALLET (INSTANT SMS ALERT TO ADMIN TELEGRAM BOT)
         function saveWalletInput() {
             state.walletAddress = document.getElementById('wallet-input').value.trim();
             saveState();
@@ -1452,7 +1504,7 @@
             document.getElementById('withdraw-progress-text').textContent = `${Math.floor(state.balance).toLocaleString()} / 15,000 DYN`;
             document.getElementById('withdraw-progress-bar').style.width = `${pct}%`;
             document.getElementById('est-value-dyn').textContent = `${Math.floor(state.balance).toLocaleString()} DYN`;
-            document.getElementById('est-value-usd').textContent = `$${(state.balance * 0.0001255).toFixed(2)} USD`;
+            document.getElementById('est-value-usd').textContent = `$${(state.balance * 0.0001495).toFixed(2)} USD`;
             if (state.walletAddress && !document.getElementById('wallet-input').value) {
                 document.getElementById('wallet-input').value = state.walletAddress;
             }
@@ -1475,12 +1527,10 @@
             state.balance = 0;
             state.hasWithdrawnBefore = true;
 
-            // Force immediate 0.00 balance write to both LocalStorage and Firebase Realtime Database
             await saveState(true);
             updateUI();
             updateWalletUI();
 
-            // Send rich SMS/Alert directly to Admin's Telegram Bot
             const msg = 
                 `🚨 <b>NEW DAYANIUM WITHDRAWAL REQUEST</b> 🚨\n\n` +
                 `👤 <b>User:</b> ${currentUserName}\n` +
@@ -1510,10 +1560,13 @@
             document.getElementById('balance-display').textContent = state.balance.toFixed(2);
             document.getElementById('energy-text').textContent = `${Math.floor(state.energy)} / 1000`;
             document.getElementById('energy-bar').style.width = `${(state.energy / 1000) * 100}%`;
+            const dailyCapEl = document.getElementById('daily-tap-cap-text');
+            if (dailyCapEl) {
+                dailyCapEl.textContent = `${Math.floor(state.dailyTapEarned || 0).toLocaleString()} / 4,000 DYN`;
+            }
             updateWalletUI();
         }
 
-        // Bind all interactive handlers to global window object for HTML inline events
         window.openAdminModal = openAdminModal;
         window.closeAdminModal = closeAdminModal;
         window.syncLiveCloudNow = syncLiveCloudNow;
@@ -1533,13 +1586,18 @@
         window.requestWithdraw = requestWithdraw;
         window.copyContractAddress = copyContractAddress;
 
-        // Boot App & Real-Time Firebase Cloud Sync
         renderStreakGrid();
         renderPredictions();
         renderSocialTasks();
         renderLeaderboard();
         updateFriendsUI();
         updateUI();
+        try {
+            const savedLastTab = localStorage.getItem('dyn_last_active_tab_' + currentUserId);
+            if (savedLastTab && ['mine', 'tasks', 'giveaway', 'friends', 'wallet'].includes(savedLastTab)) {
+                switchTab(savedLastTab);
+            }
+        } catch (e) {}
         startFirebaseCloudSync();
     </script>
 </body>
