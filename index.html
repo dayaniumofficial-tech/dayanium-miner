@@ -148,7 +148,6 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <!-- Admin Panel Button: Only visible when logged in with Admin Telegram ID -->
             <button onclick="openAdminModal()" id="admin-btn-icon" class="w-9 h-9 rounded-xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 flex items-center justify-center text-sm shadow-lg hover:bg-cyan-500/30 transition-all hidden" title="Admin Control Panel">
                 <i class="fa-solid fa-user-shield"></i>
             </button>
@@ -183,7 +182,7 @@
                 <span class="text-cyan-400 font-bold text-sm">DYN</span>
             </div>
             <div id="bonus-badge-text" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-xs font-bold">
-                <i class="fa-solid fa-bolt text-amber-400"></i> Starter Bonus Credited
+                <i class="fa-solid fa-shield-check text-emerald-400"></i> Verified Pioneer Balance Protected
             </div>
         </div>
 
@@ -496,11 +495,11 @@
     </nav>
 
     <!-- ===================================================================== -->
-    <!-- JAVASCRIPT APPLICATION LOGIC (FIREBASE RTDB + ANTI-CHEAT + BOT SMS)   -->
+    <!-- JAVASCRIPT APPLICATION LOGIC (FULL SECURITY + RECOVERY + CLOUD SYNC)  -->
     <!-- ===================================================================== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getDatabase, ref, get, set, update, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+        import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
         const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
         if (tg) {
@@ -509,13 +508,12 @@
 
         const ADMIN_CHAT_ID = "9092264647";
         const BOT_TOKEN = "9002472348:AAH6AHtl-cbDagrWS87OPc6lx-fuc_0glz0";
-        // KEEP SAME STORAGE_PREFIX SO ALL EXISTING USERS' TOKENS REMAIN 100% INTACT
         const STORAGE_PREFIX = 'dyn_permanent_user_v35_';
         const REGISTRY_KEY = 'dyn_admin_registry_v35';
-        const DAILY_TAP_MAX_DYN = 4000;      // Anti-Cheat: Max 4,000 DYN earned via tapping per 24h
-        const MAX_CLOUD_JUMP_DYN = 10000;    // Anti-Cheat: Block any sudden jump > 10,000 DYN
+        const DAILY_TAP_MAX_DYN = 4000;
+        const MAX_SINGLE_JUMP_DYN = 10000;
+        const MAX_LEGIT_BALANCE = 250000;
 
-        // Official Dayanium-Miner Firebase Realtime Database Config
         const firebaseConfig = {
             apiKey: "AIzaSyC-r7l9kK5r7TEbNVH1uKgavG3vNJ0NjhA",
             authDomain: "dayanium-miner.firebaseapp.com",
@@ -538,7 +536,6 @@
             console.warn("Firebase RTDB init notice:", err);
         }
 
-        // Identify User ID permanently
         let currentUserId = localStorage.getItem('dyn_device_fallback_id');
         if (!currentUserId) {
             currentUserId = 'user_' + Math.floor(Math.random() * 900000 + 100000);
@@ -631,19 +628,52 @@
             }
         } catch (e) {}
 
-        function detectIsOldUserOnDevice() {
-            try {
-                for (let i = 0; i < localStorage.length; i++) {
-                    const k = localStorage.key(i);
-                    if (k && (k.includes('dyn_miner') || k.includes('dyn_permanent_user')) && !k.includes('v35')) {
-                        return true;
+        // Recover ALL legacy localStorage keys so NO existing user ever loses a single token
+        function recoverLegacyLocalData(uid) {
+            const legacyPrefixes = [
+                'dyn_permanent_user_v35_',
+                'dyn_permanent_user_v30_',
+                'dyn_permanent_user_v25_',
+                'dyn_permanent_user_v20_',
+                'dyn_permanent_user_v15_',
+                'dyn_miner_state_'
+            ];
+            let bestState = null;
+            let highestBalance = -1;
+            let foundAnyOldKey = false;
+
+            for (const prefix of legacyPrefixes) {
+                try {
+                    const raw = localStorage.getItem(prefix + uid);
+                    if (raw) {
+                        foundAnyOldKey = true;
+                        const parsed = JSON.parse(raw);
+                        const bal = Number(parsed.balance) || 0;
+                        if (bal > highestBalance) {
+                            highestBalance = bal;
+                            bestState = parsed;
+                        }
                     }
-                }
-            } catch (e) {}
-            return false;
+                } catch (e) {}
+            }
+
+            if (!foundAnyOldKey) {
+                try {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const k = localStorage.key(i);
+                        if (k && (k.includes('dyn_miner') || k.includes('dyn_permanent_user'))) {
+                            foundAnyOldKey = true;
+                            break;
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            return { bestState, foundAnyOldKey };
         }
 
-        const isReturningOldUser = detectIsOldUserOnDevice();
+        const legacyRecovery = recoverLegacyLocalData(currentUserId);
+        const isReturningOldUser = legacyRecovery.foundAnyOldKey;
         const initialBonusAmount = isReturningOldUser ? 3300 : 1000;
         const todayStr = new Date().toISOString().split('T')[0];
 
@@ -666,40 +696,43 @@
             claimedTenFriendBonus: false,
             hasWithdrawnBefore: false,
             lastWithdrawAt: null,
+            banned: false,
             walletAddress: '',
             completedTasks: [],
             predictions: {},
             joinedAt: new Date().toLocaleDateString()
         };
 
-        try {
-            const savedUserRaw = localStorage.getItem(STORAGE_PREFIX + currentUserId);
-            if (savedUserRaw) {
-                const parsed = JSON.parse(savedUserRaw);
-                state = { ...state, ...parsed };
-                if (state.hasWithdrawnBefore && Number(state.balance) === 0) {
-                    state.balance = 0;
-                } else {
-                    state.balance = Number(state.balance) !== undefined && !isNaN(Number(state.balance)) ? Number(state.balance) : initialBonusAmount;
-                }
+        if (legacyRecovery.bestState) {
+            state = { ...state, ...legacyRecovery.bestState };
+            if (state.hasWithdrawnBefore && Number(state.balance) === 0) {
+                state.balance = 0;
             } else {
-                state.balance = initialBonusAmount;
+                const recoveredBal = Number(state.balance);
+                state.balance = (!isNaN(recoveredBal) && recoveredBal > 0) ? recoveredBal : initialBonusAmount;
             }
-        } catch (e) {}
+        }
+
+        function isCheaterRecord(uid, d) {
+            if (!d) return false;
+            if (uid === ADMIN_CHAT_ID) return false;
+            const uname = String(d.name || '').toLowerCase();
+            if (uname === '@ucprintssol' || uname.includes('ucprintssol')) return true;
+            if (d.banned === true) return true;
+            if (Number(d.balance || 0) > MAX_LEGIT_BALANCE) return true;
+            return false;
+        }
+
+        if (isCheaterRecord(currentUserId, { name: currentUserName, balance: state.balance, banned: state.banned })) {
+            state.balance = 0;
+            state.banned = true;
+        }
 
         if (state.dailyTapDate !== todayStr) {
             state.dailyTapDate = todayStr;
             state.dailyTapEarned = 0;
         }
 
-        const badgeEl = document.getElementById('bonus-badge-text');
-        if (badgeEl) {
-            badgeEl.innerHTML = isReturningOldUser
-                ? '<i class="fa-solid fa-crown text-amber-400"></i> Returning Pioneer: 3,300 DYN Bonus Active'
-                : '<i class="fa-solid fa-bolt text-amber-400"></i> New Pioneer: 1,000 DYN Starter Bonus';
-        }
-
-        // Recover passive energy accumulated while offline (capped strictly at 1000)
         const nowTs = Date.now();
         if (state.lastEnergyTick) {
             const elapsedSec = Math.floor((nowTs - state.lastEnergyTick) / 1000);
@@ -709,7 +742,38 @@
         }
         state.lastEnergyTick = nowTs;
 
-        // Atomic Referral Credit Function (+500 DYN to Referrer, 100% duplicate-safe)
+        const knownCloudBalances = {};
+
+        function triggerAutoBan(uid, uname, reasonText, attemptedBalance) {
+            if (uid === ADMIN_CHAT_ID) return;
+            if (uid === currentUserId) {
+                state.balance = 0;
+                state.banned = true;
+                localStorage.setItem(STORAGE_PREFIX + currentUserId, JSON.stringify(state));
+                updateUI();
+            }
+            delete appRegistry.customers[uid];
+            localStorage.setItem(REGISTRY_KEY, JSON.stringify(appRegistry));
+
+            if (isCloudActive && rtdb) {
+                update(ref(rtdb, `miners/${uid}`), {
+                    balance: 0,
+                    banned: true,
+                    banReason: reasonText,
+                    bannedAt: new Date().toISOString()
+                }).catch(() => {});
+            }
+
+            notifyAdminBot(
+                `🚫 <b>AUTO-BAN TRIGGERED (CHEAT DETECTED)</b> 🚫\n\n` +
+                `👤 <b>User:</b> ${uname}\n` +
+                `🆔 <b>ID:</b> <code>${uid}</code>\n` +
+                `⚠️ <b>Reason:</b> ${reasonText}\n` +
+                `💰 <b>Attempted Balance:</b> ${attemptedBalance} DYN\n` +
+                `🔒 <b>Action:</b> Balance reset to 0 DYN & ID Banned`
+            );
+        }
+
         async function processReferralRewardOnce(sponsorId) {
             if (!isCloudActive || !rtdb) return false;
             if (!sponsorId || sponsorId === currentUserId) return false;
@@ -718,28 +782,32 @@
                 const claimLockRef = ref(rtdb, `referral_claims/${currentUserId}`);
                 const lockSnap = await get(claimLockRef);
                 if (lockSnap.exists()) {
+                    state.referralCreditedToSponsor = true;
                     return false;
                 }
 
                 const sponsorRef = ref(rtdb, `miners/${sponsorId}`);
-                await runTransaction(sponsorRef, (currentSponsorData) => {
-                    if (currentSponsorData === null) {
-                        return {
-                            id: sponsorId,
-                            name: `@Miner_${sponsorId.slice(-4)}`,
-                            balance: 3800,
-                            referralCount: 1,
-                            joinedAt: new Date().toLocaleDateString(),
+                const sponsorSnap = await get(sponsorRef);
+                if (sponsorSnap.exists()) {
+                    const sData = sponsorSnap.val();
+                    if (!isCheaterRecord(sponsorId, sData)) {
+                        const newBal = Math.min(MAX_LEGIT_BALANCE, Number(((Number(sData.balance) || 3000) + 500).toFixed(2)));
+                        await update(sponsorRef, {
+                            referralCount: (Number(sData.referralCount) || 0) + 1,
+                            balance: newBal,
                             updatedAt: new Date().toISOString()
-                        };
+                        });
                     }
-                    const prevRefs = Number(currentSponsorData.referralCount) || 0;
-                    const prevBal = Number(currentSponsorData.balance) || 0;
-                    currentSponsorData.referralCount = prevRefs + 1;
-                    currentSponsorData.balance = Number((prevBal + 500).toFixed(2));
-                    currentSponsorData.updatedAt = new Date().toISOString();
-                    return currentSponsorData;
-                });
+                } else {
+                    await set(sponsorRef, {
+                        id: sponsorId,
+                        name: `@Miner_${sponsorId.slice(-4)}`,
+                        balance: 3800,
+                        referralCount: 1,
+                        joinedAt: new Date().toLocaleDateString(),
+                        updatedAt: new Date().toISOString()
+                    });
+                }
 
                 await set(claimLockRef, {
                     invitedUserId: currentUserId,
@@ -760,7 +828,7 @@
                 state.referralCreditedToSponsor = true;
                 saveState();
 
-                await notifyAdminBot(
+                notifyAdminBot(
                     `🤝 <b>NEW REFERRAL ACCEPTED (+500 DYN)</b>\n\n` +
                     `👤 <b>Invited Friend:</b> ${currentUserName} (<code>${currentUserId}</code>)\n` +
                     `🎯 <b>Referrer ID:</b> <code>${sponsorId}</code>\n` +
@@ -773,7 +841,6 @@
             }
         }
 
-        // Real-Time Firebase Realtime Database Sync
         async function startFirebaseCloudSync() {
             if (!isCloudActive || !rtdb) return;
             try {
@@ -787,29 +854,23 @@
                     const cloudBal = Number(cloudData.balance) || 0;
                     const localBal = Number(state.balance) || 0;
 
-                    if (cloudData.hasWithdrawnBefore || state.hasWithdrawnBefore) {
-                        state.hasWithdrawnBefore = true;
-                        // Respect post-withdrawal balance (0 or newly mined amount after withdrawal)
-                        if (cloudData.lastWithdrawAt && (!state.lastWithdrawAt || cloudData.lastWithdrawAt >= state.lastWithdrawAt)) {
-                            state.balance = cloudBal;
-                            state.lastWithdrawAt = cloudData.lastWithdrawAt;
-                        } else {
-                            state.balance = localBal;
-                        }
+                    if (isCheaterRecord(currentUserId, cloudData)) {
+                        triggerAutoBan(currentUserId, currentUserName, 'Exceeded 250,000 DYN Limit or Banned Account', cloudBal);
+                    } else if (currentUserId !== ADMIN_CHAT_ID && (localBal - cloudBal) > MAX_SINGLE_JUMP_DYN) {
+                        triggerAutoBan(currentUserId, currentUserName, 'Single-Session Jump > 10,000 DYN Detected', localBal);
                     } else {
-                        state.balance = Math.max(cloudBal, localBal);
-                    }
-
-                    // Enforce 80,000 DYN adjustment for @marlongong (ID: 6559969444)
-                    if (currentUserId === '6559969444' && state.balance > 80000) {
-                        state.balance = 80000;
-                        await update(userRef, { balance: 80000 });
-                    }
-
-                    // Set @Imadel919100 (ID: 8709951895) balance to 31,000 DYN only if not yet withdrawn
-                    if (currentUserId === '8709951895' && !state.hasWithdrawnBefore && state.balance > 31000) {
-                        state.balance = 31000;
-                        await update(userRef, { balance: 31000 });
+                        if (cloudData.hasWithdrawnBefore || state.hasWithdrawnBefore) {
+                            state.hasWithdrawnBefore = true;
+                            if (cloudData.lastWithdrawAt && (!state.lastWithdrawAt || cloudData.lastWithdrawAt >= state.lastWithdrawAt)) {
+                                state.balance = cloudBal;
+                                state.lastWithdrawAt = cloudData.lastWithdrawAt;
+                            } else {
+                                state.balance = localBal;
+                            }
+                        } else {
+                            state.balance = Math.min(MAX_LEGIT_BALANCE, Math.max(cloudBal, localBal));
+                        }
+                        knownCloudBalances[currentUserId] = state.balance;
                     }
 
                     const cloudRefs = Number(cloudData.referralCount) || 0;
@@ -818,26 +879,28 @@
 
                     if (cloudData.referredBy) state.referredBy = cloudData.referredBy;
                     if (cloudData.joinedAt) state.joinedAt = cloudData.joinedAt;
-
-                    const bEl = document.getElementById('bonus-badge-text');
-                    if (bEl && state.balance >= 3300) {
-                        bEl.innerHTML = '<i class="fa-solid fa-crown text-amber-400"></i> Verified Pioneer Balance Synced';
-                    }
                 } else {
                     isBrandNewInCloud = true;
-                    state.balance = Math.max(state.balance, initialBonusAmount);
-                    state.joinedAt = new Date().toLocaleDateString();
+                    if (currentUserId !== ADMIN_CHAT_ID && state.balance > MAX_LEGIT_BALANCE) {
+                        triggerAutoBan(currentUserId, currentUserName, 'Initial Balance > 250,000 DYN', state.balance);
+                    } else {
+                        state.balance = Math.max(state.balance, initialBonusAmount);
+                        state.joinedAt = new Date().toLocaleDateString();
+                        knownCloudBalances[currentUserId] = state.balance;
+                    }
                 }
 
+                updateUI();
+
                 const effectiveReferrer = referrerId || state.referredBy;
-                if (effectiveReferrer && effectiveReferrer !== currentUserId && !state.referralCreditedToSponsor) {
-                    await processReferralRewardOnce(effectiveReferrer);
+                if (effectiveReferrer && effectiveReferrer !== currentUserId && !state.referralCreditedToSponsor && !state.banned) {
+                    processReferralRewardOnce(effectiveReferrer);
                 }
 
                 await saveState();
 
-                if (isBrandNewInCloud) {
-                    await notifyAdminBot(
+                if (isBrandNewInCloud && !state.banned) {
+                    notifyAdminBot(
                         `🆕 <b>NEW MINER JOINED DAYANIUM</b>\n\n` +
                         `👤 <b>User:</b> ${currentUserName}\n` +
                         `🆔 <b>ID:</b> <code>${currentUserId}</code>\n` +
@@ -846,33 +909,37 @@
                     );
                 }
 
-                // Sync specific manual balance adjustments in Firebase if needed (only if not withdrawn)
-                get(ref(rtdb, 'miners/6559969444')).then((mSnap) => {
-                    if (mSnap.exists() && !mSnap.val().hasWithdrawnBefore && Number(mSnap.val().balance) > 80000) {
-                        update(ref(rtdb, 'miners/6559969444'), { balance: 80000 });
-                    }
-                }).catch(() => {});
-
-                get(ref(rtdb, 'miners/8709951895')).then((iSnap) => {
-                    if (iSnap.exists() && !iSnap.val().hasWithdrawnBefore && Number(iSnap.val().balance) > 31000) {
-                        update(ref(rtdb, 'miners/8709951895'), { balance: 31000 });
-                    }
-                }).catch(() => {});
-
                 const allMinersRef = ref(rtdb, 'miners');
                 onValue(allMinersRef, (snapshot) => {
                     if (snapshot.exists()) {
                         const allData = snapshot.val();
                         Object.keys(allData).forEach((uid) => {
                             const d = allData[uid];
-                            let dBal = Number(d.balance || 0);
-                            if (uid === '6559969444' && !d.hasWithdrawnBefore && dBal > 80000) dBal = 80000;
-                            if (uid === '8709951895' && !d.hasWithdrawnBefore && dBal > 31000) dBal = 31000;
-                            const dRefs = Number(d.referralCount || 0);
+                            const dBal = Number(d.balance || 0);
+                            const uname = d.name || `@User_${uid.slice(-4)}`;
 
+                            if (isCheaterRecord(uid, d)) {
+                                if (!d.banned || dBal > 0) {
+                                    triggerAutoBan(uid, uname, 'Exceeded 250,000 DYN Max Cap', dBal);
+                                }
+                                delete appRegistry.customers[uid];
+                                return;
+                            }
+
+                            if (uid !== ADMIN_CHAT_ID && knownCloudBalances[uid] !== undefined) {
+                                const delta = dBal - knownCloudBalances[uid];
+                                if (delta > MAX_SINGLE_JUMP_DYN) {
+                                    triggerAutoBan(uid, uname, `Instant Jump of +${Math.floor(delta)} DYN (>10,000 Limit)`, dBal);
+                                    delete appRegistry.customers[uid];
+                                    return;
+                                }
+                            }
+                            knownCloudBalances[uid] = dBal;
+
+                            const dRefs = Number(d.referralCount || 0);
                             appRegistry.customers[uid] = {
                                 id: uid,
-                                name: d.name || `@User_${uid.slice(-4)}`,
+                                name: uname,
                                 balance: dBal,
                                 referrals: dRefs,
                                 referredBy: d.referredBy || null,
@@ -891,7 +958,7 @@
                                     state.hasWithdrawnBefore = true;
                                     state.lastWithdrawAt = d.lastWithdrawAt;
                                     changed = true;
-                                } else if (dBal > state.balance) {
+                                } else if (dBal > state.balance && (dBal - state.balance) <= MAX_SINGLE_JUMP_DYN) {
                                     state.balance = dBal;
                                     changed = true;
                                 }
@@ -955,18 +1022,39 @@
 
         function saveState(forceZeroBalance = false) {
             try {
+                if (state.banned && currentUserId !== ADMIN_CHAT_ID) {
+                    state.balance = 0;
+                    forceZeroBalance = true;
+                }
+
                 state.balance = forceZeroBalance ? 0 : Number(Number(state.balance).toFixed(2));
+
+                if (currentUserId !== ADMIN_CHAT_ID && !forceZeroBalance) {
+                    if (state.balance > MAX_LEGIT_BALANCE) {
+                        triggerAutoBan(currentUserId, currentUserName, 'Exceeded 250,000 DYN Max Cap', state.balance);
+                        return;
+                    }
+                    if (knownCloudBalances[currentUserId] !== undefined && (state.balance - knownCloudBalances[currentUserId]) > MAX_SINGLE_JUMP_DYN) {
+                        triggerAutoBan(currentUserId, currentUserName, 'Instant Jump > 10,000 DYN', state.balance);
+                        return;
+                    }
+                }
+
                 localStorage.setItem(STORAGE_PREFIX + currentUserId, JSON.stringify(state));
 
-                appRegistry.customers[currentUserId] = {
-                    id: currentUserId,
-                    name: currentUserName,
-                    balance: state.balance,
-                    referrals: state.referralCount || 0,
-                    referredBy: state.referredBy || null,
-                    joinedAt: state.joinedAt || new Date().toLocaleDateString(),
-                    isRealUser: true
-                };
+                if (!state.banned) {
+                    appRegistry.customers[currentUserId] = {
+                        id: currentUserId,
+                        name: currentUserName,
+                        balance: state.balance,
+                        referrals: state.referralCount || 0,
+                        referredBy: state.referredBy || null,
+                        joinedAt: state.joinedAt || new Date().toLocaleDateString(),
+                        isRealUser: true
+                    };
+                } else {
+                    delete appRegistry.customers[currentUserId];
+                }
                 localStorage.setItem(REGISTRY_KEY, JSON.stringify(appRegistry));
 
                 if (isCloudActive && rtdb) {
@@ -977,28 +1065,34 @@
                             let finalBalance = state.balance;
                             let finalRefs = state.referralCount || 0;
 
-                            if (forceZeroBalance) {
+                            if (forceZeroBalance || state.banned) {
                                 finalBalance = 0;
                             } else if (!window._isWithdrawingNow) {
                                 const latestSnap = await get(userRef);
                                 if (latestSnap.exists()) {
                                     const cData = latestSnap.val();
-                                    const cloudBal = Number(cData.balance) || 0;
-                                    // Anti-Cheat Jump-Guard: Reject any sudden jump > 10,000 DYN
-                                    if (finalBalance - cloudBal > MAX_CLOUD_JUMP_DYN) {
-                                        finalBalance = cloudBal;
-                                        state.balance = cloudBal;
-                                    } else if (cloudBal > finalBalance) {
-                                        finalBalance = cloudBal;
-                                        state.balance = cloudBal;
+                                    if (isCheaterRecord(currentUserId, cData)) {
+                                        triggerAutoBan(currentUserId, currentUserName, 'Banned / Over-limit Record', Number(cData.balance || 0));
+                                        return;
                                     }
-                                    document.getElementById('balance-display').textContent = state.balance.toFixed(2);
+                                    const cloudBal = Number(cData.balance) || 0;
+                                    if (currentUserId !== ADMIN_CHAT_ID && (finalBalance - cloudBal) > MAX_SINGLE_JUMP_DYN) {
+                                        triggerAutoBan(currentUserId, currentUserName, 'Cloud Jump > 10,000 DYN', finalBalance);
+                                        return;
+                                    }
+                                    if (cloudBal > finalBalance) {
+                                        finalBalance = cloudBal;
+                                        state.balance = cloudBal;
+                                        document.getElementById('balance-display').textContent = state.balance.toFixed(2);
+                                    }
                                     if (Number(cData.referralCount) > finalRefs) {
                                         finalRefs = Number(cData.referralCount);
                                         state.referralCount = finalRefs;
                                     }
                                 }
                             }
+
+                            knownCloudBalances[currentUserId] = finalBalance;
 
                             await update(userRef, {
                                 id: currentUserId,
@@ -1008,6 +1102,7 @@
                                 referredBy: state.referredBy || null,
                                 hasWithdrawnBefore: state.hasWithdrawnBefore || false,
                                 lastWithdrawAt: state.lastWithdrawAt || null,
+                                banned: state.banned || false,
                                 walletAddress: state.walletAddress || '',
                                 joinedAt: state.joinedAt || new Date().toLocaleDateString(),
                                 updatedAt: new Date().toISOString()
@@ -1035,6 +1130,12 @@
                         const allData = snap.val();
                         Object.keys(allData).forEach((uid) => {
                             const d = allData[uid];
+                            if (isCheaterRecord(uid, d)) {
+                                triggerAutoBan(uid, d.name || uid, 'Exceeded 250,000 DYN Max Cap', Number(d.balance || 0));
+                                delete appRegistry.customers[uid];
+                                return;
+                            }
+                            knownCloudBalances[uid] = Number(d.balance || 0);
                             appRegistry.customers[uid] = {
                                 id: uid,
                                 name: d.name || `@User_${uid.slice(-4)}`,
@@ -1047,6 +1148,7 @@
                         });
                         localStorage.setItem(REGISTRY_KEY, JSON.stringify(appRegistry));
                         renderAdminList();
+                        renderLeaderboard();
                         showToast('Live Firebase Cloud Synced!');
                         return;
                     }
@@ -1114,10 +1216,9 @@
             });
         }
 
-        // SECURE ADMIN MODAL
         function renderAdminList() {
             const allCustomers = Object.values(appRegistry.customers);
-            const realUsers = allCustomers.filter(c => c.isRealUser || !String(c.id).startsWith('demo_'));
+            const realUsers = allCustomers.filter(c => (c.isRealUser || !String(c.id).startsWith('demo_')) && !isCheaterRecord(c.id, c));
             const totalRealPool = realUsers.reduce((acc, c) => acc + (c.balance || 0), 0);
             const totalRealRefs = realUsers.reduce((acc, c) => acc + (c.referrals || 0), 0);
 
@@ -1165,13 +1266,16 @@
             document.getElementById('admin-modal').classList.add('hidden');
         }
 
-        // ANTI-CHEAT TAP MINING (BLOCKS AUTO-CLICKERS, ENFORCES 4,000 DYN/DAY CAP & 10,000 DYN JUMP-GUARD)
         let lastTapTimestamp = 0;
         function handleCoinTap(e) {
-            if (e && e.isTrusted === false) return; // Block scripted auto-clickers
+            if (e && e.isTrusted === false) return;
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) {
+                showToast('Account suspended due to security violation.', true);
+                return;
+            }
 
             const now = Date.now();
-            if (now - lastTapTimestamp < 85) return; // Human tap speed limit
+            if (now - lastTapTimestamp < 85) return;
             lastTapTimestamp = now;
 
             const today = new Date().toISOString().split('T')[0];
@@ -1182,6 +1286,11 @@
 
             if ((state.dailyTapEarned || 0) >= DAILY_TAP_MAX_DYN) {
                 showToast('Daily tap limit (4,000 DYN) reached! Come back tomorrow or invite friends.', true);
+                return;
+            }
+
+            if (currentUserId !== ADMIN_CHAT_ID && state.balance >= MAX_LEGIT_BALANCE) {
+                showToast('Maximum balance limit (250,000 DYN) reached!', true);
                 return;
             }
 
@@ -1216,6 +1325,7 @@
         }
 
         function claimDailyEnergyRefill() {
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) return;
             const today = new Date().toISOString().split('T')[0];
             if (state.refillDate !== today) {
                 state.refillDate = today;
@@ -1234,6 +1344,7 @@
         }
 
         function activateTurboBoost() {
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) return;
             const now = Date.now();
             if (state.turboUntil && now < state.turboUntil) {
                 showToast('Turbo 2x already active!', true);
@@ -1246,6 +1357,7 @@
         }
 
         function toggleAutoMining() {
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) return;
             const now = Date.now();
             if (!state.miningStartTime) {
                 state.miningStartTime = now;
@@ -1265,7 +1377,6 @@
             }
         }
 
-        // STREAK
         const STREAK_REWARDS = [100, 150, 200, 250, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1300, 1700];
         function renderStreakGrid() {
             const today = new Date().toISOString().split('T')[0];
@@ -1295,6 +1406,7 @@
         }
 
         function claimDailyStreak() {
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) return;
             const today = new Date().toISOString().split('T')[0];
             if (state.lastStreakClaimDate === today) {
                 showToast('Already claimed today!', true);
@@ -1302,7 +1414,7 @@
             }
             const day = state.streakDay || 1;
             const reward = STREAK_REWARDS[day - 1];
-            state.balance = Number((state.balance + reward).toFixed(2));
+            state.balance = Math.min(MAX_LEGIT_BALANCE, Number((state.balance + reward).toFixed(2)));
             state.lastStreakClaimDate = today;
             state.streakDay = Math.min(15, day + 1);
             saveState();
@@ -1311,7 +1423,6 @@
             showToast(`Day ${day} Reward Claimed! +${reward} DYN`);
         }
 
-        // LIVE BINANCE API PRICES FOR BTC, ETH, SOL
         let liveCryptoPrices = {
             BTC: { price: 64990.00, change: +1.42, icon: 'fa-bitcoin text-amber-400', name: 'Bitcoin' },
             ETH: { price: 1819.00, change: -0.85, icon: 'fa-ethereum text-indigo-400', name: 'Ethereum' },
@@ -1386,20 +1497,21 @@
         }
 
         function predictCrypto(symbol, dir) {
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) return;
             const now = new Date();
             const utcDayKey = now.getUTCFullYear() + '-' + (now.getUTCMonth() + 1) + '-' + now.getUTCDate();
             if (state.predictions[symbol] && state.predictions[symbol].date === utcDayKey) return;
             state.predictions[symbol] = { date: utcDayKey, dir, won: true };
-            state.balance = Number((state.balance + 500).toFixed(2));
+            state.balance = Math.min(MAX_LEGIT_BALANCE, Number((state.balance + 500).toFixed(2)));
             saveState();
             updateUI();
             renderPredictions();
             showToast(`Correct UTC prediction for ${symbol}! +500 DYN added!`);
         }
 
-        // SOCIAL TASKS
         const SOCIAL_TASKS = [
             { id: 'join_tg', title: 'Follow Official Telegram Channel', reward: 300, url: 'https://t.me/DayaniumToken', icon: 'fa-brands fa-telegram' },
+            { id: 'join_tg_community', title: 'Join Dayanium Official Community', reward: 300, url: 'https://t.me/dayaniumofficialcommunity', icon: 'fa-solid fa-users' },
             { id: 'follow_x', title: 'Follow Official Dayanium X (Twitter)', reward: 300, url: 'https://x.com/dayaniumx?s=11', icon: 'fa-brands fa-x-twitter' },
             { id: 'visit_site', title: 'Visit Official Dayanium Website', reward: 300, url: 'https://dayanium.com/', icon: 'fa-solid fa-globe' }
         ];
@@ -1422,20 +1534,21 @@
         }
 
         function completeSocialTask(id, url) {
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) return;
             if (state.completedTasks.includes(id)) return;
             window.open(url, '_blank');
             state.completedTasks.push(id);
-            state.balance = Number((state.balance + 300).toFixed(2));
+            state.balance = Math.min(MAX_LEGIT_BALANCE, Number((state.balance + 300).toFixed(2)));
             saveState();
             updateUI();
             renderSocialTasks();
             showToast('Task Completed! +300 DYN added.');
         }
 
-        // LEADERBOARD (TOP 20 AUTO-SORTED)
         function renderLeaderboard() {
             const lb = document.getElementById('leaderboard-list');
             const all = Object.values(appRegistry.customers)
+                .filter(c => !isCheaterRecord(c.id, c))
                 .map(c => ({ name: c.id === currentUserId ? `${c.name} (You)` : c.name, mined: Math.floor(c.balance), isMe: c.id === currentUserId }))
                 .sort((a, b) => b.mined - a.mined).slice(0, 20);
 
@@ -1450,7 +1563,6 @@
             `).join('');
         }
 
-        // FRIENDS & 10-FRIEND BONUS
         function updateFriendsUI() {
             const count = state.referralCount || 0;
             document.getElementById('ref-count-text').textContent = count;
@@ -1503,16 +1615,16 @@
         }
 
         function claimTenFriendBonus() {
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) return;
             if (state.claimedTenFriendBonus || (state.referralCount || 0) < 10) return;
             state.claimedTenFriendBonus = true;
-            state.balance = Number((state.balance + 4000).toFixed(2));
+            state.balance = Math.min(MAX_LEGIT_BALANCE, Number((state.balance + 4000).toFixed(2)));
             saveState();
             updateUI();
             updateFriendsUI();
             showToast('Congratulations! +4,000 DYN 10-Friend Bonus claimed!');
         }
 
-        // WITHDRAW & WALLET (INSTANT RESET TO 0.00 DYN + SMS ALERT TO ADMIN TELEGRAM BOT)
         function saveWalletInput() {
             state.walletAddress = document.getElementById('wallet-input').value.trim();
             saveState();
@@ -1531,6 +1643,10 @@
 
         async function requestWithdraw() {
             if (window._isWithdrawingNow) return;
+            if (state.banned && currentUserId !== ADMIN_CHAT_ID) {
+                showToast('Account suspended due to security violation.', true);
+                return;
+            }
             const wallet = document.getElementById('wallet-input').value.trim();
             if (!wallet.startsWith('0x') || wallet.length !== 42) {
                 showToast('Please enter a valid BEP-20 wallet address!', true);
