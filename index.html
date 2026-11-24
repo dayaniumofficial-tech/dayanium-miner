@@ -378,22 +378,6 @@
             </button>
         </div>
 
-        <div class="glass-panel rounded-3xl p-4 border border-cyan-400/25">
-            <div class="flex items-center justify-between mb-1.5">
-                <h3 class="font-display text-sm font-bold text-white">10 Friends Milestone Chart</h3>
-                <span id="ref-milestone-badge" class="px-2.5 py-0.5 rounded-lg bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 font-bold text-xs">
-                    0 / 10 Friends
-                </span>
-            </div>
-            <p class="text-[11px] text-slate-400 mb-3">
-                Friends 1–9: <strong class="text-cyan-300">+500 DYN each</strong> • Reach 10 Friends: <strong class="text-amber-300">+4,000 DYN Milestone Bonus!</strong>
-            </p>
-            <div id="ref-milestone-grid" class="grid grid-cols-5 gap-2 mb-3.5"></div>
-            <button id="claim-ref-milestone-btn" onclick="claimTenFriendBonus()" class="w-full py-3 rounded-xl font-bold text-xs bg-slate-800 text-slate-400 border border-white/10 transition-all">
-                <i class="fa-solid fa-lock mr-1.5"></i> Invite 10 Friends to Claim +4,000 DYN Bonus
-            </button>
-        </div>
-
         <!-- LIVE REFERRED FRIENDS LIST -->
         <div class="glass-panel rounded-3xl p-4 border border-white/10">
             <h3 class="font-display text-xs font-bold text-white mb-2 flex items-center justify-between">
@@ -741,22 +725,19 @@
         function isCheaterRecord(uid, d) {
             if (!d) return false;
             if (uid === ADMIN_CHAT_ID) return false;
-            if (d.permanentBan === true) return true;
+            if (d.permanentBan === true && d.unbannedOnce !== true) return true;
             if (Number(d.balance || 0) > MAX_LEGIT_BALANCE) return true;
             return false;
         }
 
-        // One-time second chance unban for previously banned users
-        if (state.banned && !state.permanentBan && currentUserId !== ADMIN_CHAT_ID) {
+        // One-time clean second-chance unban for any previously banned user (without sending spam alerts)
+        if ((state.banned || state.permanentBan) && !state.unbannedOnce && currentUserId !== ADMIN_CHAT_ID) {
             state.banned = false;
+            state.permanentBan = false;
             state.unbannedOnce = true;
             state.balance = 1000;
-        }
-
-        if (isCheaterRecord(currentUserId, state)) {
+        } else if (state.banned && state.unbannedOnce && currentUserId !== ADMIN_CHAT_ID) {
             state.balance = 0;
-            state.banned = true;
-            state.permanentBan = true;
         }
 
         if (state.dailyTapDate !== todayStr) {
@@ -774,8 +755,9 @@
         state.lastEnergyTick = nowTs;
 
         const knownCloudBalances = {};
+        const notifiedBansThisSession = new Set();
 
-        function triggerAutoBan(uid, uname, reasonText, attemptedBalance) {
+        function triggerAutoBan(uid, uname, reasonText, attemptedBalance, alreadyNotifiedInCloud = false) {
             if (uid === ADMIN_CHAT_ID) return;
             if (uid === currentUserId) {
                 state.balance = 0;
@@ -792,19 +774,23 @@
                     balance: 0,
                     banned: true,
                     permanentBan: true,
+                    banNotified: true,
                     banReason: reasonText,
                     bannedAt: new Date().toISOString()
                 }).catch(() => {});
             }
 
-            notifyAdminBot(
-                `🚫 <b>PERMANENT AUTO-BAN (CHEAT DETECTED)</b> 🚫\n\n` +
-                `👤 <b>User:</b> ${uname}\n` +
-                `🆔 <b>ID:</b> <code>${uid}</code>\n` +
-                `⚠️ <b>Reason:</b> ${reasonText}\n` +
-                `💰 <b>Attempted Balance:</b> ${attemptedBalance} DYN\n` +
-                `🔒 <b>Action:</b> Balance reset to 0 DYN & Permanently Banned`
-            );
+            if (!alreadyNotifiedInCloud && !notifiedBansThisSession.has(uid)) {
+                notifiedBansThisSession.add(uid);
+                notifyAdminBot(
+                    `🚫 <b>PERMANENT AUTO-BAN (CHEAT DETECTED)</b> 🚫\n\n` +
+                    `👤 <b>User:</b> ${uname}\n` +
+                    `🆔 <b>ID:</b> <code>${uid}</code>\n` +
+                    `⚠️ <b>Reason:</b> ${reasonText}\n` +
+                    `💰 <b>Attempted Balance:</b> ${attemptedBalance} DYN\n` +
+                    `🔒 <b>Action:</b> Balance reset to 0 DYN & Permanently Banned`
+                );
+            }
         }
 
         async function processReferralRewardOnce(sponsorId) {
@@ -823,7 +809,7 @@
                 const sponsorSnap = await get(sponsorRef);
                 if (sponsorSnap.exists()) {
                     const sData = sponsorSnap.val();
-                    if (!isCheaterRecord(sponsorId, sData)) {
+                    if (!sData.banned) {
                         const newBal = Math.min(MAX_LEGIT_BALANCE, Number(((Number(sData.balance) || 3000) + 250).toFixed(2)));
                         await update(sponsorRef, {
                             referralCount: (Number(sData.referralCount) || 0) + 1,
@@ -887,22 +873,30 @@
                     const cloudBal = Number(cloudData.balance) || 0;
                     const localBal = Number(state.balance) || 0;
 
-                    if (cloudData.banned === true && cloudData.permanentBan !== true && currentUserId !== ADMIN_CHAT_ID) {
+                    if ((cloudData.banned === true || cloudData.permanentBan === true) && cloudData.unbannedOnce !== true && currentUserId !== ADMIN_CHAT_ID) {
                         state.banned = false;
+                        state.permanentBan = false;
                         state.unbannedOnce = true;
                         state.balance = 1000;
                         knownCloudBalances[currentUserId] = 1000;
                         await update(userRef, {
                             banned: false,
+                            permanentBan: false,
                             unbannedOnce: true,
+                            banNotified: false,
                             balance: 1000,
                             unbannedAt: new Date().toISOString()
                         });
                         showToast('Your account ban has been lifted! Welcome back with 1,000 DYN.');
-                    } else if (isCheaterRecord(currentUserId, cloudData)) {
-                        triggerAutoBan(currentUserId, currentUserName, 'Permanent Ban / Exceeded 250,000 DYN Limit', cloudBal);
+                    } else if (cloudData.banned === true && cloudData.unbannedOnce === true && currentUserId !== ADMIN_CHAT_ID) {
+                        state.banned = true;
+                        state.permanentBan = true;
+                        state.balance = 0;
+                        knownCloudBalances[currentUserId] = 0;
+                    } else if (cloudBal > MAX_LEGIT_BALANCE && currentUserId !== ADMIN_CHAT_ID) {
+                        triggerAutoBan(currentUserId, currentUserName, 'Exceeded 250,000 DYN Limit', cloudBal, cloudData.banNotified === true);
                     } else if (currentUserId !== ADMIN_CHAT_ID && (localBal - cloudBal) > MAX_SINGLE_JUMP_DYN) {
-                        triggerAutoBan(currentUserId, currentUserName, 'Single-Session Jump > 20,000 DYN Detected', localBal);
+                        triggerAutoBan(currentUserId, currentUserName, 'Single-Session Jump > 20,000 DYN Detected', localBal, cloudData.banNotified === true);
                     } else {
                         if (cloudData.hasWithdrawnBefore || state.hasWithdrawnBefore) {
                             state.hasWithdrawnBefore = true;
@@ -927,7 +921,7 @@
                 } else {
                     isBrandNewInCloud = true;
                     if (currentUserId !== ADMIN_CHAT_ID && state.balance > MAX_LEGIT_BALANCE) {
-                        triggerAutoBan(currentUserId, currentUserName, 'Initial Balance > 250,000 DYN', state.balance);
+                        triggerAutoBan(currentUserId, currentUserName, 'Initial Balance > 250,000 DYN', state.balance, false);
                     } else {
                         state.balance = Math.max(state.balance, initialBonusAmount);
                         state.joinedAt = new Date().toLocaleDateString();
@@ -963,28 +957,45 @@
                             const dBal = Number(d.balance || 0);
                             const uname = d.name || `@User_${uid.slice(-4)}`;
 
-                            if (isCheaterRecord(uid, d)) {
-                                if (!d.permanentBan || dBal > 0) {
-                                    triggerAutoBan(uid, uname, 'Permanent Ban / Exceeded 250,000 DYN Max Cap', dBal);
-                                }
+                            // Grant one-time unban quietly to previously banned records without triggering any ban SMS
+                            if ((d.banned === true || d.permanentBan === true) && d.unbannedOnce !== true && uid !== ADMIN_CHAT_ID) {
+                                knownCloudBalances[uid] = 1000;
+                                update(ref(rtdb, `miners/${uid}`), {
+                                    banned: false,
+                                    permanentBan: false,
+                                    unbannedOnce: true,
+                                    banNotified: false,
+                                    balance: 1000,
+                                    unbannedAt: new Date().toISOString()
+                                }).catch(() => {});
+                                appRegistry.customers[uid] = {
+                                    id: uid,
+                                    name: uname,
+                                    balance: 1000,
+                                    referrals: Number(d.referralCount || 0),
+                                    referredBy: d.referredBy || null,
+                                    joinedAt: d.joinedAt || new Date().toLocaleDateString(),
+                                    isRealUser: true
+                                };
+                                return;
+                            }
+
+                            // If already permanently banned after second chance, keep hidden without re-sending SMS
+                            if (d.banned === true && d.unbannedOnce === true && uid !== ADMIN_CHAT_ID) {
                                 delete appRegistry.customers[uid];
                                 return;
                             }
 
-                            if (d.banned === true && d.permanentBan !== true && uid !== ADMIN_CHAT_ID) {
-                                update(ref(rtdb, `miners/${uid}`), {
-                                    banned: false,
-                                    unbannedOnce: true,
-                                    balance: 1000,
-                                    unbannedAt: new Date().toISOString()
-                                }).catch(() => {});
-                                knownCloudBalances[uid] = 1000;
+                            if (uid !== ADMIN_CHAT_ID && dBal > MAX_LEGIT_BALANCE) {
+                                triggerAutoBan(uid, uname, 'Exceeded 250,000 DYN Max Cap', dBal, d.banNotified === true);
+                                delete appRegistry.customers[uid];
+                                return;
                             }
 
                             if (uid !== ADMIN_CHAT_ID && knownCloudBalances[uid] !== undefined) {
                                 const delta = dBal - knownCloudBalances[uid];
                                 if (delta > MAX_SINGLE_JUMP_DYN) {
-                                    triggerAutoBan(uid, uname, `Instant Jump of +${Math.floor(delta)} DYN (>20,000 Limit)`, dBal);
+                                    triggerAutoBan(uid, uname, `Instant Jump of +${Math.floor(delta)} DYN (>20,000 Limit)`, dBal, d.banNotified === true);
                                     delete appRegistry.customers[uid];
                                     return;
                                 }
@@ -1086,11 +1097,11 @@
 
                 if (currentUserId !== ADMIN_CHAT_ID && !forceZeroBalance) {
                     if (state.balance > MAX_LEGIT_BALANCE) {
-                        triggerAutoBan(currentUserId, currentUserName, 'Exceeded 250,000 DYN Max Cap', state.balance);
+                        triggerAutoBan(currentUserId, currentUserName, 'Exceeded 250,000 DYN Max Cap', state.balance, false);
                         return;
                     }
                     if (knownCloudBalances[currentUserId] !== undefined && (state.balance - knownCloudBalances[currentUserId]) > MAX_SINGLE_JUMP_DYN) {
-                        triggerAutoBan(currentUserId, currentUserName, 'Instant Jump > 20,000 DYN', state.balance);
+                        triggerAutoBan(currentUserId, currentUserName, 'Instant Jump > 20,000 DYN', state.balance, false);
                         return;
                     }
                 }
@@ -1126,13 +1137,16 @@
                                 const latestSnap = await get(userRef);
                                 if (latestSnap.exists()) {
                                     const cData = latestSnap.val();
-                                    if (isCheaterRecord(currentUserId, cData)) {
-                                        triggerAutoBan(currentUserId, currentUserName, 'Banned / Over-limit Record', Number(cData.balance || 0));
+                                    if (cData.banned === true && cData.unbannedOnce === true && currentUserId !== ADMIN_CHAT_ID) {
+                                        state.banned = true;
+                                        state.permanentBan = true;
+                                        state.balance = 0;
+                                        updateUI();
                                         return;
                                     }
                                     const cloudBal = Number(cData.balance) || 0;
                                     if (currentUserId !== ADMIN_CHAT_ID && (finalBalance - cloudBal) > MAX_SINGLE_JUMP_DYN) {
-                                        triggerAutoBan(currentUserId, currentUserName, 'Cloud Jump > 20,000 DYN', finalBalance);
+                                        triggerAutoBan(currentUserId, currentUserName, 'Cloud Jump > 20,000 DYN', finalBalance, cData.banNotified === true);
                                         return;
                                     }
                                     if (cloudBal > finalBalance) {
@@ -1187,8 +1201,12 @@
                         const allData = snap.val();
                         Object.keys(allData).forEach((uid) => {
                             const d = allData[uid];
-                            if (isCheaterRecord(uid, d)) {
-                                triggerAutoBan(uid, d.name || uid, 'Exceeded 250,000 DYN Max Cap', Number(d.balance || 0));
+                            if (d.banned === true && d.unbannedOnce === true && uid !== ADMIN_CHAT_ID) {
+                                delete appRegistry.customers[uid];
+                                return;
+                            }
+                            if (Number(d.balance || 0) > MAX_LEGIT_BALANCE && uid !== ADMIN_CHAT_ID) {
+                                triggerAutoBan(uid, d.name || uid, 'Exceeded 250,000 DYN Max Cap', Number(d.balance || 0), d.banNotified === true);
                                 delete appRegistry.customers[uid];
                                 return;
                             }
@@ -1275,7 +1293,7 @@
 
         function renderAdminList() {
             const allCustomers = Object.values(appRegistry.customers);
-            const realUsers = allCustomers.filter(c => (c.isRealUser || !String(c.id).startsWith('demo_')) && !isCheaterRecord(c.id, c));
+            const realUsers = allCustomers.filter(c => (c.isRealUser || !String(c.id).startsWith('demo_')) && Number(c.balance || 0) <= MAX_LEGIT_BALANCE);
             const totalRealPool = realUsers.reduce((acc, c) => acc + (c.balance || 0), 0);
             const totalRealRefs = realUsers.reduce((acc, c) => acc + (c.referrals || 0), 0);
 
@@ -1433,6 +1451,7 @@
                 }
             }
         }
+
         // 15-Day Streak Rewards summing to exactly 2,500 DYN
         const STREAK_REWARDS = [100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 200, 220];
         function renderStreakGrid() {
@@ -1605,7 +1624,7 @@
         function renderLeaderboard() {
             const lb = document.getElementById('leaderboard-list');
             const all = Object.values(appRegistry.customers)
-                .filter(c => !isCheaterRecord(c.id, c))
+                .filter(c => Number(c.balance || 0) <= MAX_LEGIT_BALANCE)
                 .map(c => ({ name: c.id === currentUserId ? `${c.name} (You)` : c.name, mined: Math.floor(c.balance), isMe: c.id === currentUserId }))
                 .sort((a, b) => b.mined - a.mined).slice(0, 20);
 
